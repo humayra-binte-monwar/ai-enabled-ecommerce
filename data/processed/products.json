@@ -1,0 +1,24 @@
+[
+  {
+    "id": "rice-miniket-5kg",
+    "name": "Miniket Rice 5kg",
+    "category": "Rice",
+    "brand": "Fresh",
+    "price": 420,
+    "unit": "5kg",
+    "image_url": "",
+    "product_url": "",
+    "stock_status": "in_stock"
+  },
+  {
+    "id": "soybean-oil-2l",
+    "name": "Soybean Oil 2L",
+    "category": "Cooking Oil",
+    "brand": "Rupchanda",
+    "price": 360,
+    "unit": "2L",
+    "image_url": "",
+    "product_url": "",
+    "stock_status": "in_stock"
+  }
+]
