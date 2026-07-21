@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { createOrder, type Product } from "@/lib/api";
@@ -85,40 +86,45 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   }
 
   async function placeOrder() {
-    if (!customerName || !customerPhone || !customerAddress || cart.length === 0) {
-        setOrderError("Please fill in all checkout fields.");
-        return;
+    if (
+      !customerName ||
+      !customerPhone ||
+      !customerAddress ||
+      cart.length === 0
+    ) {
+      setOrderError("Please fill in all checkout fields.");
+      return;
     }
 
     setIsSubmittingOrder(true);
     setOrderError("");
 
     try {
-        await createOrder({
+      await createOrder({
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_address: customerAddress,
         items: cart.map((item) => ({
-            product_id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
+          product_id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
         })),
         total: cartTotal,
-        });
+      });
 
-        setOrderPlaced(true);
-        setIsCheckingOut(false);
-        setCart([]);
-        setCustomerName("");
-        setCustomerPhone("");
-        setCustomerAddress("");
+      setOrderPlaced(true);
+      setIsCheckingOut(false);
+      setCart([]);
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerAddress("");
     } catch {
-        setOrderError("Could not place order. Please try again.");
+      setOrderError("Could not place order. Please try again.");
     } finally {
-        setIsSubmittingOrder(false);
+      setIsSubmittingOrder(false);
     }
-    }
+  }
 
   return (
     <>
@@ -161,22 +167,26 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                 key={product.id}
                 className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
               >
-                <div className="relative mb-4 aspect-square overflow-hidden rounded-md bg-slate-100">
-                  {product.image_url ? (
-                    <Image
-                      src={product.image_url}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-3"
-                      sizes="(min-width: 1024px) 25vw, 50vw"
-                    />
-                  ) : null}
-                </div>
+                <Link href={`/products/${product.id}`}>
+                  <div className="relative mb-4 aspect-square overflow-hidden rounded-md bg-slate-100">
+                    {product.image_url ? (
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-3"
+                        sizes="(min-width: 1024px) 25vw, 50vw"
+                      />
+                    ) : null}
+                  </div>
+                </Link>
 
                 <p className="text-xs text-slate-500">{product.category}</p>
-                <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900">
-                  {product.name}
-                </h2>
+                <Link href={`/products/${product.id}`}>
+                  <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900 hover:text-red-700">
+                    {product.name}
+                  </h2>
+                </Link>
 
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-lg font-bold text-red-700">
@@ -290,7 +300,9 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                     disabled={isSubmittingOrder}
                     className="h-11 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                   >
-                    {isSubmittingOrder ? "Placing Order..." : "Place Mock Order"}
+                    {isSubmittingOrder
+                      ? "Placing Order..."
+                      : "Place Mock Order"}
                   </button>
                 </div>
               ) : null}

@@ -55,3 +55,15 @@ export async function getProducts(): Promise<Product[]> {
 
   return response.json();
 }
+
+export async function getProduct(productId: string): Promise<Product> {
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch product");
+  }
+
+  return response.json();
+}
