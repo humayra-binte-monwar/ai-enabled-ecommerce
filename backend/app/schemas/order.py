@@ -14,6 +14,8 @@ class OrderCreate(BaseModel):
     customer_address: str
     items: list[OrderItem]
     total: float
+    user_id: str | None = None
+    user_email: str | None = None
 
 
 class Order(OrderCreate):

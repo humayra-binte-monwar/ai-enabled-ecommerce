@@ -27,11 +27,13 @@ def create_order(order_data: OrderCreate) -> Order:
         supabase.table("orders")
         .insert(
             {
-                "customer_name": order_data.customer_name,
-                "customer_phone": order_data.customer_phone,
-                "customer_address": order_data.customer_address,
-                "total": order_data.total,
-                "status": "confirmed",
+            "customer_name": order_data.customer_name,
+            "customer_phone": order_data.customer_phone,
+            "customer_address": order_data.customer_address,
+            "total": order_data.total,
+            "status": "confirmed",
+            "user_id": order_data.user_id,
+            "user_email": order_data.user_email,
             }
         )
         .execute()
@@ -62,4 +64,6 @@ def create_order(order_data: OrderCreate) -> Order:
         status=order["status"],
         created_at=order["created_at"],
         items=order_data.items,
+        user_id=order.get("user_id"),
+        user_email=order.get("user_email"),
     )

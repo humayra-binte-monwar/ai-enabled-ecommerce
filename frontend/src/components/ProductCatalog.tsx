@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { createOrder, type Product } from "@/lib/api";
+import { createClient } from "@/lib/supabase/client";
 
 type CartItem = Product & {
   quantity: number;
@@ -100,6 +101,10 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     setOrderError("");
 
     try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+
       await createOrder({
         customer_name: customerName,
         customer_phone: customerPhone,
@@ -111,6 +116,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
           quantity: item.quantity,
         })),
         total: cartTotal,
+        user_id: user?.id,
+        user_email: user?.email,
       });
 
       setOrderPlaced(true);
