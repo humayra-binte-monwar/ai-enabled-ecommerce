@@ -118,6 +118,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
         total: cartTotal,
         user_id: user?.id,
         user_email: user?.email,
+        payment_method: "mock_card",
+        payment_status: "paid_demo",
       });
 
       setOrderPlaced(true);
@@ -300,6 +302,15 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                       {orderError}
                     </p>
                   ) : null}
+
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-sm font-semibold text-slate-900">
+                      Payment
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Mock card payment will be marked as paid for this demo.
+                    </p>
+                  </div>
 
                   <button
                     type="button"

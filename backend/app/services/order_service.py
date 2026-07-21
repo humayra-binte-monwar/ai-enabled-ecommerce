@@ -34,6 +34,8 @@ def create_order(order_data: OrderCreate) -> Order:
             "status": "confirmed",
             "user_id": order_data.user_id,
             "user_email": order_data.user_email,
+            "payment_method": order_data.payment_method,
+            "payment_status": order_data.payment_status,
             }
         )
         .execute()
@@ -66,4 +68,6 @@ def create_order(order_data: OrderCreate) -> Order:
         items=order_data.items,
         user_id=order.get("user_id"),
         user_email=order.get("user_email"),
+        payment_method=order.get("payment_method", "mock_card"),
+        payment_status=order.get("payment_status", "paid_demo"),
     )

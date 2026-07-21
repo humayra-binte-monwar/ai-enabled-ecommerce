@@ -16,6 +16,8 @@ class OrderCreate(BaseModel):
     total: float
     user_id: str | None = None
     user_email: str | None = None
+    payment_method: str = "mock_card"
+    payment_status: str = "paid_demo"
 
 
 class Order(OrderCreate):

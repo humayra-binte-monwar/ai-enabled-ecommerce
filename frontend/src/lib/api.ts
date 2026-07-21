@@ -26,6 +26,8 @@ export type OrderInput = {
   total: number;
   user_id?: string;
   user_email?: string;
+  payment_method?: string;
+  payment_status?: string;
 };
 
 export async function createOrder(order: OrderInput) {
