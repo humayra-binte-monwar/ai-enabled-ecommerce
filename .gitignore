@@ -1,3 +1,7 @@
 .agents/
 AGENTS.md
 shawpno_ai_ecommerce_roadmap.md
+__pycache__/
+*.py[cod]
+myenv/
+backend/myenv/

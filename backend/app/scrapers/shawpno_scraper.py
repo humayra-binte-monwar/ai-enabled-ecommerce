@@ -55,48 +55,41 @@ def scrape_shwapno_products():
         products = page.evaluate(
             """
             () => {
-                const buttons = Array.from(document.querySelectorAll("button"))
-                    .filter((button) => button.innerText.includes("Add to Bag"));
-
-                return buttons.slice(0, 80).map((button) => {
-                    let card = button.parentElement;
-
-                    while (
-                        card &&
-                        card !== document.body &&
-                        !(card.innerText.includes("৳") && card.querySelector("a"))
-                    ) {
-                        card = card.parentElement;
+                const getFirstSrcFromSet = (srcset) => {
+                    if (!srcset) {
+                        return "";
                     }
 
-                    if (!card || card === document.body) {
-                        return null;
-                    }
+                    return srcset.split(",")[0]?.trim()?.split(" ")[0] || "";
+                };
 
-                    const links = Array.from(card.querySelectorAll("a"));
-                    const productLink = links.find((link) => {
-                        const text = link.innerText.trim();
-                        const label = link.getAttribute("aria-label") || "";
-                        return text.length > 2 || label.length > 2;
-                    });
-                    const image = card.querySelector("img");
+                return Array.from(document.querySelectorAll(".product-box"))
+                    .slice(0, 80)
+                    .map((card) => {
+                        const productLink = card.querySelector(".product-box-title a");
+                        const image = card.querySelector(".product-box-gallery img");
+                        const source = card.querySelector(".product-box-gallery source");
+                        const price = card.querySelector(".active-price");
+                        const unit = Array.from(card.querySelectorAll(".product-price span"))
+                            .map((span) => span.innerText.trim())
+                            .find((text) => text.toLowerCase().includes("per")) || "Per Piece";
+                        const imageSrcSet =
+                            image?.getAttribute("srcset") ||
+                            source?.getAttribute("srcset") ||
+                            "";
 
-                    const name = (
-                        productLink?.innerText ||
-                        productLink?.getAttribute("aria-label") ||
-                        image?.getAttribute("alt") ||
-                        ""
-                    ).trim();
-
-                    const priceMatch = card.innerText.match(/৳\\s*[\\d,]+/);
-
-                    return {
-                        name,
-                        price_text: priceMatch ? priceMatch[0] : "",
-                        image_url: image?.src || "",
-                        product_url: productLink?.href || window.location.href,
-                    };
-                }).filter(Boolean);
+                        return {
+                            name: productLink?.innerText?.trim() || "",
+                            price_text: price?.innerText || "",
+                            unit,
+                            image_url:
+                                image?.getAttribute("src") ||
+                                image?.currentSrc ||
+                                getFirstSrcFromSet(imageSrcSet),
+                            product_url: productLink?.href || "",
+                        };
+                    })
+                    .filter((product) => product.name && product.price_text);
             }
             """
         )
@@ -126,7 +119,7 @@ def scrape_shwapno_products():
                 "category": "General",
                 "brand": None,
                 "price": price,
-                "unit": "Per Piece",
+                "unit": item["unit"],
                 "image_url": item["image_url"],
                 "product_url": item["product_url"],
                 "stock_status": "in_stock",
@@ -143,7 +136,9 @@ def scrape_shwapno_products():
         encoding="utf-8",
     )
 
+    with_images = sum(1 for product in unique_products if product["image_url"])
     print(f"Saved {len(unique_products)} products to {output_file}")
+    print(f"Products with images: {with_images}")
 
 
 if __name__ == "__main__":
