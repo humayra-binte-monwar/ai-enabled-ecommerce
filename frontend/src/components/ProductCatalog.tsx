@@ -98,7 +98,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   return (
     <>
       {orderPlaced ? (
-        <div className="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
           Order placed successfully. This is a demo checkout using mock payment.
         </div>
       ) : null}
@@ -110,13 +110,13 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search groceries..."
-              className="h-11 flex-1 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
+              className="h-11 flex-1 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none placeholder:text-slate-600 focus:border-red-600"
             />
 
             <select
               value={category}
               onChange={(event) => setCategory(event.target.value)}
-              className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
+              className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-red-600"
             >
               {categories.map((item) => (
                 <option key={item} value={item}>
@@ -154,7 +154,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                 </h2>
 
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-lg font-bold text-emerald-700">
+                  <span className="text-lg font-bold text-red-700">
                     Tk {product.price}
                   </span>
                   <span className="text-xs text-slate-500">{product.unit}</span>
@@ -163,7 +163,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                 <button
                   type="button"
                   onClick={() => addToCart(product)}
-                  className="mt-4 h-10 w-full rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                  className="mt-4 h-10 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
                 >
                   Add to Cart
                 </button>
@@ -200,7 +200,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                       >
                         -
                       </button>
-                      <span className="w-5 text-center text-sm">
+                      <span className="w-5 text-center text-sm font-semibold text-slate-900">
                         {item.quantity}
                       </span>
                       <button
@@ -217,7 +217,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
               <div className="flex items-center justify-between pt-2">
                 <span className="font-semibold text-slate-900">Total</span>
-                <span className="text-xl font-bold text-emerald-700">
+                <span className="text-xl font-bold text-red-700">
                   Tk {cartTotal}
                 </span>
               </div>
@@ -236,27 +236,27 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                     value={customerName}
                     onChange={(event) => setCustomerName(event.target.value)}
                     placeholder="Full name"
-                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-600"
+                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-600 focus:border-red-600"
                   />
 
                   <input
                     value={customerPhone}
                     onChange={(event) => setCustomerPhone(event.target.value)}
                     placeholder="Phone number"
-                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-600"
+                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none placeholder:text-slate-600 focus:border-red-600"
                   />
 
                   <textarea
                     value={customerAddress}
                     onChange={(event) => setCustomerAddress(event.target.value)}
                     placeholder="Delivery address"
-                    className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-600"
+                    className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-600 focus:border-red-600"
                   />
 
                   <button
                     type="button"
                     onClick={placeOrder}
-                    className="h-11 w-full rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                    className="h-11 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
                   >
                     Place Mock Order
                   </button>
