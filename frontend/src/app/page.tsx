@@ -1,5 +1,4 @@
-import Image from "next/image";
-
+import { ProductCatalog } from "@/components/ProductCatalog";
 import { getProducts } from "@/lib/api";
 
 export default async function Home() {
@@ -21,38 +20,7 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <article
-              key={product.id}
-              className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <div className="relative mb-4 aspect-square overflow-hidden rounded-md bg-slate-100">
-                {product.image_url ? (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-3"
-                    sizes="(min-width: 1024px) 25vw, 50vw"
-                  />
-                ) : null}
-              </div>
-
-              <p className="text-xs text-slate-500">{product.category}</p>
-              <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900">
-                {product.name}
-              </h2>
-
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-lg font-bold text-emerald-700">
-                  ৳{product.price}
-                </span>
-                <span className="text-xs text-slate-500">{product.unit}</span>
-              </div>
-            </article>
-          ))}
-        </div>
+        <ProductCatalog products={products} />
       </section>
     </main>
   );
