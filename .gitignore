@@ -5,3 +5,7 @@ __pycache__/
 *.py[cod]
 myenv/
 backend/myenv/
+.env
+.env.local
+backend/.env
+frontend/.env.local

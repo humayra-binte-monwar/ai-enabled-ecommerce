@@ -1,22 +1,32 @@
-import json
-from pathlib import Path
-
+from app.core.supabase_client import get_supabase
 from app.schemas.product import Product
-
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-PRODUCTS_FILE = PROJECT_ROOT / "data" / "processed" / "products.json"
 
 
 def load_products() -> list[Product]:
-    with PRODUCTS_FILE.open("r", encoding="utf-8") as file:
-        data = json.load(file)
+    supabase = get_supabase()
 
-    return [Product(**item) for item in data]
+    response = (
+        supabase.table("products")
+        .select("*")
+        .order("name")
+        .execute()
+    )
+
+    return [Product(**item) for item in response.data]
 
 
 def get_product_by_id(product_id: str) -> Product | None:
-    for product in load_products():
-        if product.id == product_id:
-            return product
+    supabase = get_supabase()
 
-    return None
+    response = (
+        supabase.table("products")
+        .select("*")
+        .eq("id", product_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not response.data:
+        return None
+
+    return Product(**response.data[0])
