@@ -1,42 +1,65 @@
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-from uuid import uuid4
-
+from app.core.supabase_client import get_supabase
 from app.schemas.order import Order, OrderCreate
-
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-ORDERS_FILE = PROJECT_ROOT / "data" / "processed" / "orders.json"
 
 
 def load_orders() -> list[Order]:
-    if not ORDERS_FILE.exists():
-        return []
+    supabase = get_supabase()
 
-    with ORDERS_FILE.open("r", encoding="utf-8") as file:
-        data = json.load(file)
+    response = (
+        supabase.table("orders")
+        .select("*, order_items(*)")
+        .order("created_at", desc=True)
+        .execute()
+    )
 
-    return [Order(**item) for item in data]
+    orders = []
+    for item in response.data:
+        order_items = item.pop("order_items", [])
+        orders.append(Order(**item, items=order_items))
 
-
-def save_orders(orders: list[Order]) -> None:
-    ORDERS_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-    with ORDERS_FILE.open("w", encoding="utf-8") as file:
-        json.dump([order.model_dump() for order in orders], file, indent=2)
+    return orders
 
 
 def create_order(order_data: OrderCreate) -> Order:
-    orders = load_orders()
+    supabase = get_supabase()
 
-    order = Order(
-        id=str(uuid4()),
-        status="confirmed",
-        created_at=datetime.now(timezone.utc).isoformat(),
-        **order_data.model_dump(),
+    order_response = (
+        supabase.table("orders")
+        .insert(
+            {
+                "customer_name": order_data.customer_name,
+                "customer_phone": order_data.customer_phone,
+                "customer_address": order_data.customer_address,
+                "total": order_data.total,
+                "status": "confirmed",
+            }
+        )
+        .execute()
     )
 
-    orders.append(order)
-    save_orders(orders)
+    order = order_response.data[0]
 
-    return order
+    order_items = [
+        {
+            "order_id": order["id"],
+            "product_id": item.product_id,
+            "name": item.name,
+            "price": item.price,
+            "quantity": item.quantity,
+        }
+        for item in order_data.items
+    ]
+
+    if order_items:
+        supabase.table("order_items").insert(order_items).execute()
+
+    return Order(
+        id=order["id"],
+        customer_name=order["customer_name"],
+        customer_phone=order["customer_phone"],
+        customer_address=order["customer_address"],
+        total=float(order["total"]),
+        status=order["status"],
+        created_at=order["created_at"],
+        items=order_data.items,
+    )

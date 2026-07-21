@@ -5,12 +5,7 @@ from app.schemas.product import Product
 def load_products() -> list[Product]:
     supabase = get_supabase()
 
-    response = (
-        supabase.table("products")
-        .select("*")
-        .order("name")
-        .execute()
-    )
+    response = supabase.table("products").select("*").order("name").execute()
 
     return [Product(**item) for item in response.data]
 
