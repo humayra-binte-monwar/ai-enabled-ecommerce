@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
-import type { Product } from "@/lib/api";
+import { createOrder, type Product } from "@/lib/api";
 
 type CartItem = Product & {
   quantity: number;
@@ -22,6 +22,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   const categories = useMemo(() => {
     return ["All", ...Array.from(new Set(products.map((p) => p.category)))];
@@ -82,18 +84,41 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     );
   }
 
-  function placeOrder() {
+  async function placeOrder() {
     if (!customerName || !customerPhone || !customerAddress || cart.length === 0) {
-      return;
+        setOrderError("Please fill in all checkout fields.");
+        return;
     }
 
-    setOrderPlaced(true);
-    setIsCheckingOut(false);
-    setCart([]);
-    setCustomerName("");
-    setCustomerPhone("");
-    setCustomerAddress("");
-  }
+    setIsSubmittingOrder(true);
+    setOrderError("");
+
+    try {
+        await createOrder({
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_address: customerAddress,
+        items: cart.map((item) => ({
+            product_id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+        })),
+        total: cartTotal,
+        });
+
+        setOrderPlaced(true);
+        setIsCheckingOut(false);
+        setCart([]);
+        setCustomerName("");
+        setCustomerPhone("");
+        setCustomerAddress("");
+    } catch {
+        setOrderError("Could not place order. Please try again.");
+    } finally {
+        setIsSubmittingOrder(false);
+    }
+    }
 
   return (
     <>
@@ -253,12 +278,19 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                     className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-600 focus:border-red-600"
                   />
 
+                  {orderError ? (
+                    <p className="text-sm font-medium text-red-700">
+                      {orderError}
+                    </p>
+                  ) : null}
+
                   <button
                     type="button"
                     onClick={placeOrder}
-                    className="h-11 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
+                    disabled={isSubmittingOrder}
+                    className="h-11 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-400"
                   >
-                    Place Mock Order
+                    {isSubmittingOrder ? "Placing Order..." : "Place Mock Order"}
                   </button>
                 </div>
               ) : null}
