@@ -17,6 +17,11 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
 
   const categories = useMemo(() => {
     return ["All", ...Array.from(new Set(products.map((p) => p.category)))];
@@ -41,6 +46,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   }, [cart]);
 
   function addToCart(product: Product) {
+    setOrderPlaced(false);
     setCart((currentCart) => {
       const existingItem = currentCart.find((item) => item.id === product.id);
 
@@ -76,135 +82,190 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     );
   }
 
+  function placeOrder() {
+    if (!customerName || !customerPhone || !customerAddress || cart.length === 0) {
+      return;
+    }
+
+    setOrderPlaced(true);
+    setIsCheckingOut(false);
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <section>
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search groceries..."
-            className="h-11 flex-1 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
-          />
-
-          <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
-          >
-            {categories.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+    <>
+      {orderPlaced ? (
+        <div className="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Order placed successfully. This is a demo checkout using mock payment.
         </div>
+      ) : null}
 
-        <p className="mb-4 text-sm text-slate-600">
-          Showing {filteredProducts.length} of {products.length} products
-        </p>
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <section>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search groceries..."
+              className="h-11 flex-1 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
+            />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <article
-              key={product.id}
-              className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+            <select
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-emerald-600"
             >
-              <div className="relative mb-4 aspect-square overflow-hidden rounded-md bg-slate-100">
-                {product.image_url ? (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-3"
-                    sizes="(min-width: 1024px) 25vw, 50vw"
-                  />
-                ) : null}
-              </div>
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <p className="text-xs text-slate-500">{product.category}</p>
-              <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900">
-                {product.name}
-              </h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Showing {filteredProducts.length} of {products.length} products
+          </p>
 
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-lg font-bold text-emerald-700">
-                  ৳{product.price}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.map((product) => (
+              <article
+                key={product.id}
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="relative mb-4 aspect-square overflow-hidden rounded-md bg-slate-100">
+                  {product.image_url ? (
+                    <Image
+                      src={product.image_url}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-3"
+                      sizes="(min-width: 1024px) 25vw, 50vw"
+                    />
+                  ) : null}
+                </div>
+
+                <p className="text-xs text-slate-500">{product.category}</p>
+                <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900">
+                  {product.name}
+                </h2>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-lg font-bold text-emerald-700">
+                    Tk {product.price}
+                  </span>
+                  <span className="text-xs text-slate-500">{product.unit}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => addToCart(product)}
+                  className="mt-4 h-10 w-full rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                >
+                  Add to Cart
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <aside className="h-fit rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-950">Cart</h2>
+            <span className="text-sm text-slate-500">{cart.length} items</span>
+          </div>
+
+          {cart.length === 0 ? (
+            <p className="text-sm text-slate-500">Your cart is empty.</p>
+          ) : (
+            <div className="space-y-4">
+              {cart.map((item) => (
+                <div key={item.id} className="border-b border-slate-100 pb-3">
+                  <p className="text-sm font-medium text-slate-900">
+                    {item.name}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-sm text-slate-600">
+                      Tk {item.price} x {item.quantity}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => decreaseQuantity(item.id)}
+                        className="h-7 w-7 rounded border border-slate-300 text-slate-700"
+                      >
+                        -
+                      </button>
+                      <span className="w-5 text-center text-sm">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => increaseQuantity(item.id)}
+                        className="h-7 w-7 rounded border border-slate-300 text-slate-700"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex items-center justify-between pt-2">
+                <span className="font-semibold text-slate-900">Total</span>
+                <span className="text-xl font-bold text-emerald-700">
+                  Tk {cartTotal}
                 </span>
-                <span className="text-xs text-slate-500">{product.unit}</span>
               </div>
 
               <button
                 type="button"
-                onClick={() => addToCart(product)}
-                className="mt-4 h-10 w-full rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                onClick={() => setIsCheckingOut(true)}
+                className="h-11 w-full rounded-md bg-slate-950 text-sm font-semibold text-white"
               >
-                Add to Cart
+                Checkout
               </button>
-            </article>
-          ))}
-        </div>
-      </section>
 
-      <aside className="h-fit rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-950">Cart</h2>
-          <span className="text-sm text-slate-500">{cart.length} items</span>
-        </div>
+              {isCheckingOut ? (
+                <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                  <input
+                    value={customerName}
+                    onChange={(event) => setCustomerName(event.target.value)}
+                    placeholder="Full name"
+                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-600"
+                  />
 
-        {cart.length === 0 ? (
-          <p className="text-sm text-slate-500">Your cart is empty.</p>
-        ) : (
-          <div className="space-y-4">
-            {cart.map((item) => (
-              <div key={item.id} className="border-b border-slate-100 pb-3">
-                <p className="text-sm font-medium text-slate-900">
-                  {item.name}
-                </p>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm text-slate-600">
-                    ৳{item.price} × {item.quantity}
-                  </span>
+                  <input
+                    value={customerPhone}
+                    onChange={(event) => setCustomerPhone(event.target.value)}
+                    placeholder="Phone number"
+                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none focus:border-emerald-600"
+                  />
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => decreaseQuantity(item.id)}
-                      className="h-7 w-7 rounded border border-slate-300 text-slate-700"
-                    >
-                      -
-                    </button>
-                    <span className="w-5 text-center text-sm">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => increaseQuantity(item.id)}
-                      className="h-7 w-7 rounded border border-slate-300 text-slate-700"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <textarea
+                    value={customerAddress}
+                    onChange={(event) => setCustomerAddress(event.target.value)}
+                    placeholder="Delivery address"
+                    className="min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-600"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={placeOrder}
+                    className="h-11 w-full rounded-md bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    Place Mock Order
+                  </button>
                 </div>
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="font-semibold text-slate-900">Total</span>
-              <span className="text-xl font-bold text-emerald-700">
-                ৳{cartTotal}
-              </span>
+              ) : null}
             </div>
-
-            <button
-              type="button"
-              className="h-11 w-full rounded-md bg-slate-950 text-sm font-semibold text-white"
-            >
-              Checkout
-            </button>
-          </div>
-        )}
-      </aside>
-    </div>
+          )}
+        </aside>
+      </div>
+    </>
   );
 }
