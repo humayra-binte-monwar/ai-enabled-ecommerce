@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { BundlePlanner } from "@/components/BundlePlanner";
 import { CartOptimizer } from "@/components/CartOptimizer";
+import { Chatbot } from "@/components/Chatbot";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
 import { createOrder, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
@@ -176,6 +177,10 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section>
+          <div className="mb-8">
+            <Chatbot cart={cart} onAddToCart={addSuggestedProductToCart} />
+          </div>
+
           <div className="mb-8">
             <NaturalLanguageFinder
               getQuantity={getCartQuantity}

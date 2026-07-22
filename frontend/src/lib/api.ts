@@ -220,3 +220,62 @@ export async function optimizeCart(
 
   return response.json();
 }
+
+export type ChatCartItemInput = {
+  product_id: string;
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+};
+
+export type ChatProductCard = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string | null;
+  image_url: string | null;
+  product_url: string | null;
+  reason: string | null;
+};
+
+export type ChatCartAction = {
+  type: string;
+  product_id: string | null;
+  product_name: string | null;
+  quantity: number | null;
+  requires_confirmation: boolean;
+  message: string;
+  product: ChatProductCard | null;
+};
+
+export type ChatResponse = {
+  message: string;
+  intent: string;
+  products: ChatProductCard[];
+  cart_actions: ChatCartAction[];
+  follow_up_suggestions: string[];
+  tools_used: string[];
+  fallback: boolean;
+};
+
+export async function sendChatMessage(input: {
+  session_id: string;
+  message: string;
+  cart_items: ChatCartItemInput[];
+}): Promise<ChatResponse> {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/ai/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to send chat message");
+  }
+
+  return response.json();
+}
