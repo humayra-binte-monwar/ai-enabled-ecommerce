@@ -10,6 +10,41 @@ MEAL_NEEDS = {
     "essentials": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap"],
 }
 
+QUANTITY_RULES = {
+    "rice": (1.0, "about 1kg rice per person for 4 days"),
+    "dal": (0.35, "about 350g dal per person for 4 days"),
+    "flour": (0.5, "about 500g flour/atta per person for 4 days"),
+    "atta": (0.5, "about 500g atta per person for 4 days"),
+    "oil": (0.25, "about 250ml cooking oil per person for 4 days"),
+    "egg": (3.0, "about 3 eggs per person for 4 days"),
+    "milk": (1.0, "about 1 pack of milk per person for 4 days"),
+    "bread": (1.0, "about 1 loaf/pack for every 2 people"),
+    "biscuit": (1.0, "about 1 pack for every 2 people"),
+    "snacks": (1.0, "about 1 pack for every 2 people"),
+    "salt": (1.0, "1 pack is usually enough for a small household"),
+    "sugar": (0.25, "about 250g sugar per person for 4 days"),
+    "tea": (0.2, "1 small tea pack usually covers several days"),
+    "spice": (1.0, "1 spice pack is usually enough"),
+    "masala": (1.0, "1 masala pack is usually enough"),
+    "soap": (1.0, "about 1 item for every 2 people"),
+}
+
+
+def estimate_quantity(product_name: str, term: str, people: int, duration_days: int) -> tuple[int, str]:
+    searchable_text = f"{product_name} {term}".lower()
+    scale = max(1, people) * max(1, duration_days) / 4
+
+    for keyword, (base_quantity, explanation) in QUANTITY_RULES.items():
+        if keyword in searchable_text:
+            if keyword in {"salt", "spice", "masala", "tea"}:
+                return 1, explanation
+
+            quantity = round(base_quantity * scale)
+            return max(1, quantity), explanation
+
+    quantity = max(1, round(scale / 2))
+    return quantity, "estimated from household size and shopping duration"
+
 
 def plan_bundle(
     budget: float,
@@ -51,7 +86,19 @@ def plan_bundle(
         candidates.sort(key=lambda product: product.price)
 
         for candidate in candidates:
-            if estimated_total + candidate.price <= budget:
+            quantity, quantity_reason = estimate_quantity(
+                candidate.name,
+                term,
+                people,
+                duration_days,
+            )
+            line_total = candidate.price * quantity
+
+            while quantity > 1 and estimated_total + line_total > budget:
+                quantity -= 1
+                line_total = candidate.price * quantity
+
+            if estimated_total + line_total <= budget:
                 selected_items.append(
                     BundlePlannerItem(
                         id=candidate.id,
@@ -61,11 +108,12 @@ def plan_bundle(
                         unit=candidate.unit,
                         image_url=candidate.image_url,
                         product_url=candidate.product_url,
-                        reason=f"Added for {term}",
+                        suggested_quantity=quantity,
+                        reason=f"Added for {term}; {quantity_reason}",
                     )
                 )
                 used_product_ids.add(candidate.id)
-                estimated_total += candidate.price
+                estimated_total += line_total
                 break
 
     if not selected_items:

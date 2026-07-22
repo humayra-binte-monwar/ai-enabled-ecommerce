@@ -176,6 +176,10 @@ export function BundlePlanner({
                 <p className="mt-1 text-sm font-bold text-red-700">
                   Tk {item.price}
                 </p>
+                <p className="mt-1 text-xs font-semibold text-slate-900">
+                  Suggested: {item.suggested_quantity} item
+                  {item.suggested_quantity === 1 ? "" : "s"}
+                </p>
                 <p className="mt-1 text-xs text-slate-600">{item.reason}</p>
 
                 {quantity > 0 ? (

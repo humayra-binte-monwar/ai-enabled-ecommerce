@@ -138,6 +138,7 @@ export type BundlePlannerItem = {
   unit: string | null;
   image_url: string | null;
   product_url: string | null;
+  suggested_quantity: number;
   reason: string;
 };
 

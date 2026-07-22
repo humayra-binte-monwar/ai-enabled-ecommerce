@@ -20,6 +20,7 @@ class ProductFinderResponse(BaseModel):
     summary: str
     products: list[ProductFinderProduct]
 
+
 class BundlePlannerRequest(BaseModel):
     budget: float
     people: int
@@ -36,6 +37,7 @@ class BundlePlannerItem(BaseModel):
     unit: str | None = None
     image_url: str | None = None
     product_url: str | None = None
+    suggested_quantity: int
     reason: str
 
 
