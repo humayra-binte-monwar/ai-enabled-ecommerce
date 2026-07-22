@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import type { Product, ProductFinderProduct } from "@/lib/api";
 import {
-  findProductsByIntent,
-  type ProductFinderProduct,
-} from "@/lib/api";
+  getSemanticSearchModelName,
+  semanticProductSearch,
+} from "@/lib/semanticProductSearch";
 
 type NaturalLanguageFinderProps = {
+  products: Product[];
   getQuantity: (productId: string) => number;
   onAddToCart: (product: ProductFinderProduct) => void;
   onDecreaseQuantity: (productId: string) => void;
@@ -17,6 +19,7 @@ type NaturalLanguageFinderProps = {
 };
 
 export function NaturalLanguageFinder({
+  products: catalogProducts,
   getQuantity,
   onAddToCart,
   onDecreaseQuantity,
@@ -36,15 +39,20 @@ export function NaturalLanguageFinder({
 
     setIsLoading(true);
     setError("");
-    setSummary("");
+    setSummary("Loading the free browser AI model and matching your catalog...");
     setProducts([]);
 
     try {
-      const response = await findProductsByIntent(query);
-      setSummary(response.summary);
-      setProducts(response.products);
+      const matches = await semanticProductSearch(catalogProducts, query);
+      setSummary(
+        `Matched "${query.trim()}" against ${catalogProducts.length} scraped products using ${getSemanticSearchModelName()}.`
+      );
+      setProducts(matches);
     } catch {
-      setError("Could not run the product finder. Please try again.");
+      setError(
+        "Could not load the browser AI model. Check your internet connection and try again."
+      );
+      setSummary("");
     } finally {
       setIsLoading(false);
     }
@@ -55,11 +63,11 @@ export function NaturalLanguageFinder({
       <div>
         <p className="text-sm font-medium text-red-700">AI Feature 1</p>
         <h2 className="mt-1 text-lg font-bold text-slate-950">
-          Natural Language Product Finder
+          Free Semantic Product Finder
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Try phrases like “breakfast under 300”, “snacks for kids”, or
-          “biryani essentials”.
+          Try phrases like breakfast under 300, snacks for kids, or biryani
+          essentials.
         </p>
       </div>
 
@@ -77,7 +85,7 @@ export function NaturalLanguageFinder({
           disabled={isLoading}
           className="h-10 rounded-md bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:bg-slate-400"
         >
-          {isLoading ? "Finding..." : "Find Products"}
+          {isLoading ? "Matching..." : "Find Products"}
         </button>
       </div>
 
