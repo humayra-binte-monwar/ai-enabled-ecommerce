@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.orders import router as orders_router
 from app.api.products import router as products_router
 from app.api.ai import router as ai_router
+from app.api.payments import router as payments_router
 
 app = FastAPI(
     title="AI Grocery Commerce API",
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(products_router)
 app.include_router(orders_router)
 app.include_router(ai_router)
+app.include_router(payments_router)
 
 
 @app.get("/api/health")

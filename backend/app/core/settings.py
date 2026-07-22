@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     ai_agent_enabled: bool = False
     ai_agent_max_tool_calls: int = 6
     ai_health_disclaimer_enabled: bool = True
+    frontend_url: str = "http://localhost:3000"
+    backend_url: str = "http://localhost:8001"
+    sslcommerz_store_id: str = ""
+    sslcommerz_store_password: str = ""
+    sslcommerz_sandbox: bool = True
 
     model_config = SettingsConfigDict(env_file=".env")
 

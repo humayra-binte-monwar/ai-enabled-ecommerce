@@ -132,7 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         );
       },
       clearCart() {
-        setCart([]);
+        setCart((currentCart) => (currentCart.length > 0 ? [] : currentCart));
       },
       getCartQuantity(productId) {
         return cart.find((item) => item.id === productId)?.quantity ?? 0;

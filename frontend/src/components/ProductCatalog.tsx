@@ -9,7 +9,7 @@ import { useCart } from "@/components/CartProvider";
 import { CartOptimizer } from "@/components/CartOptimizer";
 import { Chatbot } from "@/components/Chatbot";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
-import { createOrder, type ChatCartAction, type Product } from "@/lib/api";
+import { createCheckout, type ChatCartAction, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
 type ProductCatalogProps = {
@@ -35,7 +35,6 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     cartItemCount,
     cartTotal,
     changeQuantityBy,
-    clearCart,
     decreaseQuantity,
     getCartQuantity,
     increaseQuantity,
@@ -123,32 +122,26 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
     try {
       const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        setOrderError("Please sign in before starting checkout.");
+        return;
+      }
 
-      await createOrder({
+      const checkout = await createCheckout({
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_address: customerAddress,
         items: cart.map((item) => ({
           product_id: item.id,
-          name: item.name,
-          price: item.price,
           quantity: item.quantity,
         })),
-        total: cartTotal,
-        user_id: user?.id,
-        user_email: user?.email,
-        payment_method: "mock_card",
-        payment_status: "paid_demo",
-      });
+        idempotency_key: crypto.randomUUID(),
+      }, session.access_token);
 
-      setOrderPlaced(true);
-      setIsCheckingOut(false);
-      clearCart();
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerAddress("");
+      window.location.assign(checkout.payment_url);
     } catch {
       setOrderError("Could not place order. Please try again.");
     } finally {
@@ -380,7 +373,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                       Payment
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
-                      Mock card payment will be marked as paid for this demo.
+                      Secure SSLCommerz sandbox checkout. Your order is only
+                      marked paid after the gateway verifies it.
                     </p>
                   </div>
 
@@ -392,7 +386,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                   >
                     {isSubmittingOrder
                       ? "Placing Order..."
-                      : "Place Mock Order"}
+                      : "Continue to Payment"}
                   </button>
                 </div>
               ) : null}

@@ -14,36 +14,39 @@ export type Product = {
   product_type?: string | null;
 };
 
-export type OrderItemInput = {
+export type CheckoutItemInput = {
   product_id: string;
-  name: string;
-  price: number;
   quantity: number;
 };
 
-export type OrderInput = {
+export type CheckoutInput = {
   customer_name: string;
   customer_phone: string;
   customer_address: string;
-  items: OrderItemInput[];
-  total: number;
-  user_id?: string;
-  user_email?: string;
-  payment_method?: string;
-  payment_status?: string;
+  items: CheckoutItemInput[];
+  idempotency_key: string;
 };
 
-export async function createOrder(order: OrderInput) {
-  const response = await fetch(`${API_BASE_URL}/api/orders`, {
+export type CheckoutSession = {
+  order_id: string;
+  payment_url: string;
+};
+
+export async function createCheckout(
+  checkout: CheckoutInput,
+  accessToken: string
+): Promise<CheckoutSession> {
+  const response = await fetch(`${API_BASE_URL}/api/orders/checkout`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(order),
+    body: JSON.stringify(checkout),
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create order");
+    throw new Error("Failed to start checkout");
   }
 
   return response.json();
