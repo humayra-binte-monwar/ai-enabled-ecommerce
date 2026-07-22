@@ -115,9 +115,17 @@ def create_pending_order(checkout: CheckoutCreate, user: CurrentUser) -> dict:
                 "currency": order["currency"],
             }
         ).execute()
-    except Exception:
-        supabase.table("orders").delete().eq("id", order["id"]).execute()
-        raise
+    except Exception as error:
+        try:
+            supabase.table("orders").delete().eq("id", order["id"]).execute()
+        except Exception:
+            # Preserve the original checkout error if cleanup cannot complete.
+            pass
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Checkout could not be started. Please try again.",
+        ) from error
 
     return order
 
