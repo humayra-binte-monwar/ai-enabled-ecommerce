@@ -5,15 +5,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { BundlePlanner } from "@/components/BundlePlanner";
+import { useCart } from "@/components/CartProvider";
 import { CartOptimizer } from "@/components/CartOptimizer";
 import { Chatbot } from "@/components/Chatbot";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
 import { createOrder, type ChatCartAction, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
-
-type CartItem = Product & {
-  quantity: number;
-};
 
 type ProductCatalogProps = {
   products: Product[];
@@ -32,7 +29,18 @@ type SuggestedProduct = {
 export function ProductCatalog({ products }: ProductCatalogProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const {
+    addToCart,
+    cart,
+    cartItemCount,
+    cartTotal,
+    changeQuantityBy,
+    clearCart,
+    decreaseQuantity,
+    getCartQuantity,
+    increaseQuantity,
+    removeFromCart,
+  } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [customerName, setCustomerName] = useState("");
@@ -59,29 +67,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     });
   }, [products, search, category]);
 
-  const cartTotal = useMemo(() => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  }, [cart]);
-
-  function addToCart(product: Product, quantity = 1) {
-    const safeQuantity = Math.max(1, quantity);
-    setOrderPlaced(false);
-    setCart((currentCart) => {
-      const existingItem = currentCart.find((item) => item.id === product.id);
-
-      if (existingItem) {
-        return currentCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + safeQuantity }
-            : item
-        );
-      }
-
-      return [...currentCart, { ...product, quantity: safeQuantity }];
-    });
-  }
-
   function addSuggestedProductToCart(product: SuggestedProduct, quantity = 1) {
+    setOrderPlaced(false);
     addToCart({
       id: product.id,
       name: product.name,
@@ -93,44 +80,6 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
       product_url: product.product_url,
       stock_status: "in_stock",
     }, quantity);
-  }
-
-  function decreaseQuantity(productId: string) {
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  }
-
-  function increaseQuantity(productId: string) {
-    setCart((currentCart) =>
-      currentCart.map((item) =>
-        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  }
-
-  function removeFromCart(productId: string) {
-    setCart((currentCart) =>
-      currentCart.filter((item) => item.id !== productId)
-    );
-  }
-
-  function changeQuantityBy(productId: string, delta: number) {
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + delta }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
   }
 
   function applyChatCartAction(action: ChatCartAction) {
@@ -156,10 +105,6 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     if (action.type === "decrease_quantity") {
       changeQuantityBy(action.product_id, -(action.quantity ?? 1));
     }
-  }
-
-  function getCartQuantity(productId: string) {
-    return cart.find((item) => item.id === productId)?.quantity ?? 0;
   }
 
   async function placeOrder() {
@@ -200,7 +145,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
       setOrderPlaced(true);
       setIsCheckingOut(false);
-      setCart([]);
+      clearCart();
       setCustomerName("");
       setCustomerPhone("");
       setCustomerAddress("");
@@ -323,7 +268,10 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
                 <button
                   type="button"
-                  onClick={() => addToCart(product)}
+                  onClick={() => {
+                    setOrderPlaced(false);
+                    addToCart(product);
+                  }}
                   className="mt-4 h-10 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
                 >
                   Add to Cart
@@ -336,7 +284,9 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
         <aside className="h-fit rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-950">Cart</h2>
-            <span className="text-sm text-slate-500">{cart.length} items</span>
+            <span className="text-sm text-slate-500">
+              {cartItemCount} item{cartItemCount === 1 ? "" : "s"}
+            </span>
           </div>
 
           {cart.length === 0 ? (

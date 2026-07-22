@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AddToCartButton } from "@/components/AddToCartButton";
 import { getProduct } from "@/lib/api";
 
 type ProductPageProps = {
@@ -75,6 +76,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </a>
             ) : null}
           </div>
+
+          <AddToCartButton product={product} />
         </div>
       </section>
     </main>
