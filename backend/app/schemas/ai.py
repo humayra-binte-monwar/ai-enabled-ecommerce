@@ -47,3 +47,34 @@ class BundlePlannerResponse(BaseModel):
     estimated_total: float
     remaining_budget: float
     items: list[BundlePlannerItem]
+
+
+class CartOptimizerItem(BaseModel):
+    product_id: str
+    name: str
+    category: str
+    price: float
+    quantity: int
+
+
+class CartOptimizerRequest(BaseModel):
+    items: list[CartOptimizerItem]
+    goal: str | None = None
+
+
+class CartOptimizerSuggestion(BaseModel):
+    type: str
+    message: str
+    product_id: str | None = None
+    product_name: str | None = None
+    category: str | None = None
+    price: float | None = None
+    unit: str | None = None
+    image_url: str | None = None
+    product_url: str | None = None
+
+
+class CartOptimizerResponse(BaseModel):
+    summary: str
+    cart_total: float
+    suggestions: list[CartOptimizerSuggestion]

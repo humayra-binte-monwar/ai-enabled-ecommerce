@@ -1,9 +1,16 @@
 from fastapi import APIRouter
 
-from app.schemas.ai import ProductFinderRequest, ProductFinderResponse
-from app.services.product_finder_service import find_products
-from app.schemas.ai import BundlePlannerRequest, BundlePlannerResponse
 from app.services.bundle_planner_service import plan_bundle
+from app.services.cart_optimizer_service import optimize_cart
+from app.services.product_finder_service import find_products
+from app.schemas.ai import (
+    BundlePlannerRequest,
+    BundlePlannerResponse,
+    CartOptimizerRequest,
+    CartOptimizerResponse,
+    ProductFinderRequest,
+    ProductFinderResponse,
+)
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -11,6 +18,7 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 @router.post("/product-finder", response_model=ProductFinderResponse)
 def product_finder(request: ProductFinderRequest):
     return find_products(request.query)
+
 
 @router.post("/bundle-planner", response_model=BundlePlannerResponse)
 def bundle_planner(request: BundlePlannerRequest):
@@ -21,3 +29,8 @@ def bundle_planner(request: BundlePlannerRequest):
         meal_type=request.meal_type,
         preference=request.preference,
     )
+
+
+@router.post("/cart-optimizer", response_model=CartOptimizerResponse)
+def cart_optimizer(request: CartOptimizerRequest):
+    return optimize_cart(items=request.items, goal=request.goal)

@@ -161,7 +161,7 @@ export type BundlePlannerResponse = {
 export async function planGroceryBundle(
   input: BundlePlannerInput
 ): Promise<BundlePlannerResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/ai/bundle-planner`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/ai/bundle-planner`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -171,6 +171,51 @@ export async function planGroceryBundle(
 
   if (!response.ok) {
     throw new Error("Failed to plan grocery bundle");
+  }
+
+  return response.json();
+}
+
+export type CartOptimizerItemInput = {
+  product_id: string;
+  name: string;
+  category: string;
+  price: number;
+  quantity: number;
+};
+
+export type CartOptimizerSuggestion = {
+  type: string;
+  message: string;
+  product_id: string | null;
+  product_name: string | null;
+  category: string | null;
+  price: number | null;
+  unit: string | null;
+  image_url: string | null;
+  product_url: string | null;
+};
+
+export type CartOptimizerResponse = {
+  summary: string;
+  cart_total: number;
+  suggestions: CartOptimizerSuggestion[];
+};
+
+export async function optimizeCart(
+  items: CartOptimizerItemInput[],
+  goal?: string
+): Promise<CartOptimizerResponse> {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/ai/cart-optimizer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ items, goal }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to optimize cart");
   }
 
   return response.json();

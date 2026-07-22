@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { BundlePlanner } from "@/components/BundlePlanner";
+import { CartOptimizer } from "@/components/CartOptimizer";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
 import { createOrder, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
@@ -313,6 +314,11 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                   Tk {cartTotal}
                 </span>
               </div>
+
+              <CartOptimizer
+                cart={cart}
+                onAddToCart={addSuggestedProductToCart}
+              />
 
               <button
                 type="button"
