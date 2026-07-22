@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { BundlePlanner } from "@/components/BundlePlanner";
+import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
 import { createOrder, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
@@ -13,6 +15,16 @@ type CartItem = Product & {
 
 type ProductCatalogProps = {
   products: Product[];
+};
+
+type SuggestedProduct = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string | null;
+  image_url: string | null;
+  product_url: string | null;
 };
 
 export function ProductCatalog({ products }: ProductCatalogProps) {
@@ -66,6 +78,20 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     });
   }
 
+  function addSuggestedProductToCart(product: SuggestedProduct) {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      brand: null,
+      price: product.price,
+      unit: product.unit,
+      image_url: product.image_url,
+      product_url: product.product_url,
+      stock_status: "in_stock",
+    });
+  }
+
   function decreaseQuantity(productId: string) {
     setCart((currentCart) =>
       currentCart
@@ -84,6 +110,10 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
         item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
+  }
+
+  function getCartQuantity(productId: string) {
+    return cart.find((item) => item.id === productId)?.quantity ?? 0;
   }
 
   async function placeOrder() {
@@ -145,6 +175,24 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section>
+          <div className="mb-8">
+            <NaturalLanguageFinder
+              getQuantity={getCartQuantity}
+              onAddToCart={addSuggestedProductToCart}
+              onDecreaseQuantity={decreaseQuantity}
+              onIncreaseQuantity={increaseQuantity}
+            />
+          </div>
+
+          <div className="mb-8">
+            <BundlePlanner
+              getQuantity={getCartQuantity}
+              onAddToCart={addSuggestedProductToCart}
+              onDecreaseQuantity={decreaseQuantity}
+              onIncreaseQuantity={increaseQuantity}
+            />
+          </div>
+
           <div className="mb-6 flex flex-col gap-3 sm:flex-row">
             <input
               value={search}

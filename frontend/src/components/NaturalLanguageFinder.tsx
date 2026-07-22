@@ -9,7 +9,19 @@ import {
   type ProductFinderProduct,
 } from "@/lib/api";
 
-export function NaturalLanguageFinder() {
+type NaturalLanguageFinderProps = {
+  getQuantity: (productId: string) => number;
+  onAddToCart: (product: ProductFinderProduct) => void;
+  onDecreaseQuantity: (productId: string) => void;
+  onIncreaseQuantity: (productId: string) => void;
+};
+
+export function NaturalLanguageFinder({
+  getQuantity,
+  onAddToCart,
+  onDecreaseQuantity,
+  onIncreaseQuantity,
+}: NaturalLanguageFinderProps) {
   const [query, setQuery] = useState("");
   const [summary, setSummary] = useState("");
   const [products, setProducts] = useState<ProductFinderProduct[]>([]);
@@ -79,33 +91,70 @@ export function NaturalLanguageFinder() {
 
       {products.length > 0 ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="rounded-md border border-slate-200 bg-slate-50 p-3 hover:border-red-200"
-            >
-              <div className="relative mb-3 aspect-square overflow-hidden rounded bg-white">
-                {product.image_url ? (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-2"
-                    sizes="(min-width: 1024px) 20vw, 50vw"
-                  />
-                ) : null}
-              </div>
+          {products.map((product) => {
+            const quantity = getQuantity(product.id);
 
-              <p className="line-clamp-2 text-sm font-semibold text-slate-950">
-                {product.name}
-              </p>
-              <p className="mt-1 text-sm font-bold text-red-700">
-                Tk {product.price}
-              </p>
-              <p className="mt-1 text-xs text-slate-600">{product.reason}</p>
-            </Link>
-          ))}
+            return (
+              <article
+                key={product.id}
+                className="rounded-md border border-slate-200 bg-slate-50 p-3 hover:border-red-200"
+              >
+                <Link href={`/products/${product.id}`}>
+                  <div className="relative mb-3 aspect-square overflow-hidden rounded bg-white">
+                    {product.image_url ? (
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-2"
+                        sizes="(min-width: 1024px) 20vw, 50vw"
+                      />
+                    ) : null}
+                  </div>
+                </Link>
+
+                <Link href={`/products/${product.id}`}>
+                  <p className="line-clamp-2 text-sm font-semibold text-slate-950 hover:text-red-700">
+                    {product.name}
+                  </p>
+                </Link>
+                <p className="mt-1 text-sm font-bold text-red-700">
+                  Tk {product.price}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">{product.reason}</p>
+
+                {quantity > 0 ? (
+                  <div className="mt-3 flex h-9 items-center justify-between rounded-md border border-red-200 bg-white px-2">
+                    <button
+                      type="button"
+                      onClick={() => onDecreaseQuantity(product.id)}
+                      className="h-7 w-7 rounded text-sm font-bold text-red-700 hover:bg-red-50"
+                    >
+                      -
+                    </button>
+                    <span className="text-sm font-semibold text-slate-900">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onIncreaseQuantity(product.id)}
+                      className="h-7 w-7 rounded text-sm font-bold text-red-700 hover:bg-red-50"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onAddToCart(product)}
+                    className="mt-3 h-9 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    Add to Cart
+                  </button>
+                )}
+              </article>
+            );
+          })}
         </div>
       ) : null}
     </div>

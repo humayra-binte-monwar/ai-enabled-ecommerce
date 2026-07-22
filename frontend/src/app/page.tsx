@@ -1,8 +1,6 @@
 import { AuthPanel } from "@/components/AuthPanel";
 import { ProductCatalog } from "@/components/ProductCatalog";
-import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
 import { getProducts, type Product } from "@/lib/api";
-import { BundlePlanner } from "@/components/BundlePlanner";
 
 export default async function Home() {
   let products: Product[] = [];
@@ -33,14 +31,6 @@ export default async function Home() {
 
         <div className="mb-8 max-w-md">
           <AuthPanel />
-        </div>
-
-        <div className="mb-8">
-          <NaturalLanguageFinder />
-        </div>
-
-        <div className="mb-8">
-          <BundlePlanner />
         </div>
 
         {productsError ? (

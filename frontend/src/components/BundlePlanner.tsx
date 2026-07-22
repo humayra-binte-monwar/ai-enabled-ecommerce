@@ -6,7 +6,19 @@ import { useState } from "react";
 
 import { planGroceryBundle, type BundlePlannerItem } from "@/lib/api";
 
-export function BundlePlanner() {
+type BundlePlannerProps = {
+  getQuantity: (productId: string) => number;
+  onAddToCart: (product: BundlePlannerItem) => void;
+  onDecreaseQuantity: (productId: string) => void;
+  onIncreaseQuantity: (productId: string) => void;
+};
+
+export function BundlePlanner({
+  getQuantity,
+  onAddToCart,
+  onDecreaseQuantity,
+  onIncreaseQuantity,
+}: BundlePlannerProps) {
   const [budget, setBudget] = useState(1500);
   const [people, setPeople] = useState(2);
   const [durationDays, setDurationDays] = useState(3);
@@ -134,33 +146,70 @@ export function BundlePlanner() {
 
       {items.length > 0 ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map((item) => (
-            <Link
-              key={item.id}
-              href={`/products/${item.id}`}
-              className="rounded-md border border-slate-200 bg-slate-50 p-3 hover:border-red-200"
-            >
-              <div className="relative mb-3 aspect-square overflow-hidden rounded bg-white">
-                {item.image_url ? (
-                  <Image
-                    src={item.image_url}
-                    alt={item.name}
-                    fill
-                    className="object-contain p-2"
-                    sizes="(min-width: 1024px) 20vw, 50vw"
-                  />
-                ) : null}
-              </div>
+          {items.map((item) => {
+            const quantity = getQuantity(item.id);
 
-              <p className="line-clamp-2 text-sm font-semibold text-slate-950">
-                {item.name}
-              </p>
-              <p className="mt-1 text-sm font-bold text-red-700">
-                Tk {item.price}
-              </p>
-              <p className="mt-1 text-xs text-slate-600">{item.reason}</p>
-            </Link>
-          ))}
+            return (
+              <article
+                key={item.id}
+                className="rounded-md border border-slate-200 bg-slate-50 p-3 hover:border-red-200"
+              >
+                <Link href={`/products/${item.id}`}>
+                  <div className="relative mb-3 aspect-square overflow-hidden rounded bg-white">
+                    {item.image_url ? (
+                      <Image
+                        src={item.image_url}
+                        alt={item.name}
+                        fill
+                        className="object-contain p-2"
+                        sizes="(min-width: 1024px) 20vw, 50vw"
+                      />
+                    ) : null}
+                  </div>
+                </Link>
+
+                <Link href={`/products/${item.id}`}>
+                  <p className="line-clamp-2 text-sm font-semibold text-slate-950 hover:text-red-700">
+                    {item.name}
+                  </p>
+                </Link>
+                <p className="mt-1 text-sm font-bold text-red-700">
+                  Tk {item.price}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">{item.reason}</p>
+
+                {quantity > 0 ? (
+                  <div className="mt-3 flex h-9 items-center justify-between rounded-md border border-red-200 bg-white px-2">
+                    <button
+                      type="button"
+                      onClick={() => onDecreaseQuantity(item.id)}
+                      className="h-7 w-7 rounded text-sm font-bold text-red-700 hover:bg-red-50"
+                    >
+                      -
+                    </button>
+                    <span className="text-sm font-semibold text-slate-900">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onIncreaseQuantity(item.id)}
+                      className="h-7 w-7 rounded text-sm font-bold text-red-700 hover:bg-red-50"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onAddToCart(item)}
+                    className="mt-3 h-9 w-full rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    Add to Cart
+                  </button>
+                )}
+              </article>
+            );
+          })}
         </div>
       ) : null}
     </div>
