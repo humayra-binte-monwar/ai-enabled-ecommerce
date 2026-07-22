@@ -27,7 +27,16 @@ export async function getFreshAccessToken() {
   const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
   const shouldRefresh = expiresAt > 0 && expiresAt - Date.now() < 60_000;
 
-  if (!shouldRefresh) {
+  if (shouldRefresh) {
+    const {
+      data: { session: refreshedSession },
+    } = await supabase.auth.refreshSession();
+
+    return refreshedSession?.access_token ?? null;
+  }
+
+  const { error } = await supabase.auth.getUser(session.access_token);
+  if (!error) {
     return session.access_token;
   }
 
@@ -35,7 +44,21 @@ export async function getFreshAccessToken() {
     data: { session: refreshedSession },
   } = await supabase.auth.refreshSession();
 
-  return refreshedSession?.access_token ?? null;
+  if (!refreshedSession) {
+    await supabase.auth.signOut();
+    return null;
+  }
+
+  const { error: refreshValidationError } = await supabase.auth.getUser(
+    refreshedSession.access_token
+  );
+
+  if (refreshValidationError) {
+    await supabase.auth.signOut();
+    return null;
+  }
+
+  return refreshedSession.access_token;
 }
 
 export async function refreshAccessToken() {

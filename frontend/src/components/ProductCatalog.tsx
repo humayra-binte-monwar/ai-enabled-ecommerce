@@ -168,7 +168,17 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
           return;
         }
 
-        checkout = await createCheckout(checkoutPayload, accessToken);
+        try {
+          checkout = await createCheckout(checkoutPayload, accessToken);
+        } catch (retryError) {
+          if (retryError instanceof ApiError && retryError.status === 401) {
+            await supabase.auth.signOut();
+            setOrderError("Your session expired. Please log in again before checkout.");
+            return;
+          }
+
+          throw retryError;
+        }
       }
 
       window.location.assign(checkout.payment_url);

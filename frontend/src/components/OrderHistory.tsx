@@ -42,8 +42,19 @@ export function OrderHistory() {
             try {
               setOrders(await getMyOrders(accessToken));
               return;
-            } catch {
-              await supabase.auth.signOut();
+            } catch (retryError) {
+              if (retryError instanceof ApiError && retryError.status === 401) {
+                await supabase.auth.signOut();
+                setError("Your session expired. Please log in again.");
+                return;
+              }
+
+              setError(
+                retryError instanceof Error
+                  ? retryError.message
+                  : "Could not load your order history right now."
+              );
+              return;
             }
           }
         }
