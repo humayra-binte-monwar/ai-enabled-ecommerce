@@ -1,9 +1,18 @@
 import { AuthPanel } from "@/components/AuthPanel";
 import { ProductCatalog } from "@/components/ProductCatalog";
-import { getProducts } from "@/lib/api";
+import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
+import { getProducts, type Product } from "@/lib/api";
 
 export default async function Home() {
-  const products = await getProducts();
+  let products: Product[] = [];
+  let productsError = "";
+
+  try {
+    products = await getProducts();
+  } catch {
+    productsError =
+      "Products could not load. Make sure the FastAPI backend is running.";
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-8">
@@ -25,7 +34,17 @@ export default async function Home() {
           <AuthPanel />
         </div>
 
-        <ProductCatalog products={products} />
+        <div className="mb-8">
+          <NaturalLanguageFinder />
+        </div>
+
+        {productsError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+            {productsError}
+          </div>
+        ) : (
+          <ProductCatalog products={products} />
+        )}
       </section>
     </main>
   );

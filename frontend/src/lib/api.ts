@@ -47,9 +47,27 @@ export async function createOrder(order: OrderInput) {
 }
 
 const API_BASE_URL = "http://127.0.0.1:8000";
+const REQUEST_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export async function getProducts(): Promise<Product[]> {
-  const response = await fetch(`${API_BASE_URL}/api/products`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/products`, {
     cache: "no-store",
   });
 
@@ -61,12 +79,52 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProduct(productId: string): Promise<Product> {
-  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
-    cache: "no-store",
-  });
+  const response = await fetchWithTimeout(
+    `${API_BASE_URL}/api/products/${productId}`,
+    {
+      cache: "no-store",
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch product");
+  }
+
+  return response.json();
+}
+
+export type ProductFinderProduct = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string | null;
+  image_url: string | null;
+  product_url: string | null;
+  reason: string;
+};
+
+export type ProductFinderResponse = {
+  summary: string;
+  products: ProductFinderProduct[];
+};
+
+export async function findProductsByIntent(
+  query: string
+): Promise<ProductFinderResponse> {
+  const response = await fetchWithTimeout(
+    `${API_BASE_URL}/api/ai/product-finder`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to find products");
   }
 
   return response.json();
