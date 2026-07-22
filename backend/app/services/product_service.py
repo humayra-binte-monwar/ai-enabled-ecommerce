@@ -10,7 +10,7 @@ PRODUCTS_FILE = PROJECT_ROOT / "data" / "processed" / "products.json"
 
 
 def load_local_products() -> list[Product]:
-    with PRODUCTS_FILE.open("r", encoding="utf-8") as file:
+    with PRODUCTS_FILE.open("r", encoding="utf-8-sig") as file:
         products = json.load(file)
 
     return [enrich_product(Product(**item)) for item in products]

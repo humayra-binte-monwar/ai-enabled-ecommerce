@@ -1,0 +1,22 @@
+﻿{
+  "generated_at": "2026-07-22T18:06:06.839028+00:00",
+  "record_count": 421,
+  "category_counts": {
+    "Atta Maida & Suji": 30,
+    "Condensed Milk & Cream": 6,
+    "Deodorant": 45,
+    "Floor Glass & Wood Cleaners": 45,
+    "Food": 49,
+    "Frozen": 27,
+    "General": 68,
+    "Pasta": 21,
+    "Sauces & Pickles": 50,
+    "Spices": 48,
+    "Storage & Containers": 32
+  },
+  "missing_image_count": 0,
+  "missing_source_url_count": 0,
+  "rejected_or_duplicate_count": 19,
+  "min_price": 5.0,
+  "max_price": 2100.0
+}
