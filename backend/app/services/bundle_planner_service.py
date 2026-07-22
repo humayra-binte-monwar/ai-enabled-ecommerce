@@ -3,11 +3,32 @@ from app.services.product_finder_service import get_intent_terms
 from app.services.product_service import load_products
 
 MEAL_NEEDS = {
-    "breakfast": ["milk", "bread", "egg", "tea", "coffee", "cereal", "oats"],
-    "lunch": ["rice", "dal", "oil", "spice", "vegetable", "fish", "chicken"],
-    "dinner": ["rice", "dal", "oil", "spice", "vegetable", "egg"],
-    "snacks": ["biscuit", "chips", "juice", "cake", "chanachur", "noodles"],
-    "essentials": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap"],
+    "baby": ["baby", "diaper", "milk", "cereal", "powder", "soap", "lotion"],
+    "baking": ["flour", "atta", "sugar", "butter", "milk", "chocolate", "cream"],
+    "beverage": ["water", "juice", "soft drink", "cola", "tea", "coffee", "milk"],
+    "biryani": ["rice", "oil", "ghee", "spice", "masala", "onion", "salt"],
+    "breakfast": ["milk", "bread", "egg", "tea", "coffee", "cereal", "oats", "butter"],
+    "cleaning": ["detergent", "soap", "dishwash", "cleaner", "toilet", "tissue"],
+    "cooking": ["rice", "dal", "oil", "salt", "spice", "masala", "onion", "garlic"],
+    "curry": ["oil", "spice", "masala", "onion", "garlic", "ginger", "salt"],
+    "dairy": ["milk", "powder", "cheese", "butter", "yogurt", "cream"],
+    "dessert": ["milk", "sugar", "semai", "cream", "chocolate", "cake", "biscuit"],
+    "dinner": ["rice", "dal", "oil", "spice", "vegetable", "egg", "fish", "chicken"],
+    "eid": ["rice", "semai", "milk", "sugar", "ghee", "spice", "oil"],
+    "essentials": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap", "milk"],
+    "family": ["rice", "dal", "oil", "milk", "egg", "bread", "soap", "detergent"],
+    "healthy": ["dal", "vegetable", "egg", "milk", "oats", "fruit", "atta"],
+    "iftar": ["dates", "juice", "chola", "oil", "puffed rice", "semai", "fruit"],
+    "kids": ["milk", "juice", "biscuit", "cake", "chocolate", "noodles", "cereal"],
+    "lunch": ["rice", "dal", "oil", "spice", "vegetable", "fish", "chicken", "egg"],
+    "monthly": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap", "detergent"],
+    "personal": ["soap", "shampoo", "toothpaste", "brush", "lotion", "powder"],
+    "picnic": ["chips", "biscuit", "juice", "water", "cake", "noodles", "chanachur"],
+    "ramadan": ["dates", "juice", "chola", "oil", "puffed rice", "semai", "milk"],
+    "school": ["biscuit", "juice", "cake", "bread", "chocolate", "water"],
+    "snacks": ["biscuit", "chips", "juice", "cake", "chanachur", "noodles", "chocolate"],
+    "tea": ["tea", "milk", "sugar", "biscuit", "cake"],
+    "weekly": ["rice", "dal", "oil", "milk", "egg", "bread", "vegetable"],
 }
 
 QUANTITY_RULES = {
