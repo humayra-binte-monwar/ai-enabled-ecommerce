@@ -74,6 +74,39 @@ STOP_WORDS = {
     "within",
 }
 
+NON_FOOD_TERMS = {
+    "cleaner",
+    "detergent",
+    "dishwash",
+    "floor",
+    "lotion",
+    "soap",
+    "toilet",
+    "wash",
+}
+
+FOOD_INTENTS = {
+    "baking",
+    "biryani",
+    "breakfast",
+    "cooking",
+    "curry",
+    "dairy",
+    "dessert",
+    "dinner",
+    "eid",
+    "healthy",
+    "iftar",
+    "kids",
+    "lunch",
+    "meal",
+    "picnic",
+    "ramadan",
+    "school",
+    "snacks",
+    "tea",
+}
+
 
 def extract_budget(query: str) -> float | None:
     match = re.search(r"(?:under|below|within|max|maximum)\s*(?:tk|taka)?\s*(\d+)", query)
@@ -110,10 +143,32 @@ def get_intent_terms(query: str) -> list[str]:
     return list(dict.fromkeys(terms))
 
 
+def is_food_query(query: str) -> bool:
+    query_lower = query.lower()
+    return any(intent in query_lower for intent in FOOD_INTENTS)
+
+
+def term_matches_product(term: str, searchable_text: str) -> bool:
+    if term == "egg" and "noodle" in searchable_text:
+        return False
+
+    if term == "milk" and any(blocked in searchable_text for blocked in ["body milk", "lotion"]):
+        return False
+
+    if term == "oil" and any(
+        blocked in searchable_text
+        for blocked in ["body wash", "cleaner", "detergent", "soap", "toilet"]
+    ):
+        return False
+
+    return term in searchable_text
+
+
 def find_products(query: str) -> dict:
     products = load_products()
     budget = extract_budget(query.lower())
     terms = get_intent_terms(query)
+    food_query = is_food_query(query)
 
     scored_products = []
 
@@ -127,13 +182,19 @@ def find_products(query: str) -> dict:
             ]
         ).lower()
 
+        if food_query and any(term in searchable_text for term in NON_FOOD_TERMS):
+            continue
+
         score = 0
         matched_terms = []
 
         for term in terms:
-            if term in searchable_text:
+            if term_matches_product(term, searchable_text):
                 score += 2
                 matched_terms.append(term)
+
+        if terms and not matched_terms:
+            continue
 
         if budget and product.price <= budget:
             score += 1
@@ -141,7 +202,7 @@ def find_products(query: str) -> dict:
         if budget and product.price > budget:
             score -= 2
 
-        if score > 0:
+        if score > 0 and matched_terms:
             scored_products.append((score, matched_terms, product))
 
     scored_products.sort(key=lambda item: (-item[0], item[2].price))
@@ -160,7 +221,7 @@ def find_products(query: str) -> dict:
             reason=(
                 f"Matched: {', '.join(matched_terms)}"
                 if matched_terms
-                else "Fits your budget"
+                else "Matched catalog intent"
             ),
         )
         for _score, matched_terms, product in top_matches
