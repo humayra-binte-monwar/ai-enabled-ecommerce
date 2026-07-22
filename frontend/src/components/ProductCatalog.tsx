@@ -49,7 +49,16 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   const [orderError, setOrderError] = useState("");
 
   const categories = useMemo(() => {
-    return ["All", ...Array.from(new Set(products.map((p) => p.category)))];
+    return [
+      "All",
+      ...Array.from(
+        new Set(
+          products.map(
+            (product) => product.normalized_category ?? product.category
+          )
+        )
+      ).sort(),
+    ];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -60,7 +69,8 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
         product.brand?.toLowerCase().includes(search.toLowerCase());
 
       const matchesCategory =
-        category === "All" || product.category === category;
+        category === "All" ||
+        (product.normalized_category ?? product.category) === category;
 
       return matchesSearch && matchesCategory;
     });
