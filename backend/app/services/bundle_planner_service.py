@@ -1,6 +1,89 @@
+import math
+import re
+
 from app.schemas.ai import BundlePlannerItem
 from app.services.product_finder_service import get_intent_terms
 from app.services.product_service import load_products
+
+FOOD_PLAN_MEALS = {
+    "baking",
+    "beverage",
+    "biryani",
+    "breakfast",
+    "cooking",
+    "curry",
+    "dairy",
+    "dessert",
+    "dinner",
+    "eid",
+    "healthy",
+    "iftar",
+    "kids",
+    "lunch",
+    "picnic",
+    "ramadan",
+    "school",
+    "snacks",
+    "tea",
+}
+
+NON_FOOD_TERMS = {
+    "bathroom",
+    "body wash",
+    "clean",
+    "cleaner",
+    "cleaning",
+    "detergent",
+    "dishwash",
+    "floor",
+    "glass cleaner",
+    "laundry",
+    "liquid detergent",
+    "lotion",
+    "powder free",
+    "rin",
+    "shampoo",
+    "soap",
+    "tiles",
+    "toilet",
+    "wash",
+    "wheel",
+}
+
+TERM_RULES = {
+    "oil": {
+        "required_any": ["oil", "soyabean", "soybean", "mustard", "rice bran", "sunflower"],
+        "excluded": ["body wash", "lotion", "toilet", "cleaner", "detergent", "soap"],
+    },
+    "egg": {
+        "required_any": ["egg loose", "egg"],
+        "excluded": ["noodle", "noodles", "cake", "biscuit"],
+    },
+    "rice": {
+        "required_any": ["rice", "chinigura", "miniket", "najir", "basmati"],
+        "excluded": [],
+    },
+    "dal": {
+        "required_any": ["dal", "lentil", "moshur", "mug", "motor"],
+        "excluded": [],
+    },
+    "milk": {
+        "required_any": ["milk"],
+        "excluded": ["body milk", "lotion"],
+    },
+    "bread": {
+        "required_any": ["bread", "bun", "loaf"],
+        "excluded": [],
+    },
+    "flour": {
+        "required_any": ["flour", "atta", "maida"],
+        "excluded": [],
+    },
+    "atta": {
+        "required_any": ["atta", "flour"],
+        "excluded": [],
+    },
+}
 
 MEAL_NEEDS = {
     "baby": ["baby", "diaper", "milk", "cereal", "powder", "soap", "lotion"],
@@ -31,6 +114,8 @@ MEAL_NEEDS = {
     "weekly": ["rice", "dal", "oil", "milk", "egg", "bread", "vegetable"],
 }
 
+INTENT_ONLY_TERMS = set(MEAL_NEEDS) - {"snacks", "tea"}
+
 QUANTITY_RULES = {
     "rice": (1.0, "about 1kg rice per person for 4 days"),
     "dal": (0.35, "about 350g dal per person for 4 days"),
@@ -51,9 +136,38 @@ QUANTITY_RULES = {
 }
 
 
+def get_package_size(product_name: str) -> tuple[float, str] | None:
+    name = product_name.lower()
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(kg|gm|g|ltr|l|ml)", name)
+
+    if not match:
+        return None
+
+    amount = float(match.group(1))
+    unit = match.group(2)
+
+    if unit == "kg":
+        return amount, "kg"
+    if unit in {"gm", "g"}:
+        return amount / 1000, "kg"
+    if unit in {"ltr", "l"}:
+        return amount, "l"
+    if unit == "ml":
+        return amount / 1000, "l"
+
+    return None
+
+
 def estimate_quantity(product_name: str, term: str, people: int, duration_days: int) -> tuple[int, str]:
     searchable_text = f"{product_name} {term}".lower()
     scale = max(1, people) * max(1, duration_days) / 4
+
+    package_size = get_package_size(product_name)
+
+    if term == "oil" and package_size and package_size[1] == "l":
+        needed_liters = 0.25 * scale
+        quantity = math.ceil(needed_liters / package_size[0])
+        return max(1, quantity), "about 250ml cooking oil per person for 4 days"
 
     for keyword, (base_quantity, explanation) in QUANTITY_RULES.items():
         if keyword in searchable_text:
@@ -67,6 +181,43 @@ def estimate_quantity(product_name: str, term: str, people: int, duration_days: 
     return quantity, "estimated from household size and shopping duration"
 
 
+def is_food_plan(query: str) -> bool:
+    query_lower = query.lower()
+    asks_for_non_food = any(
+        word in query_lower for word in ["cleaning", "personal", "toiletries", "bathroom"]
+    )
+    asks_for_food = any(meal in query_lower for meal in FOOD_PLAN_MEALS)
+
+    return asks_for_food and not asks_for_non_food
+
+
+def product_text(product) -> str:
+    return " ".join(
+        [
+            product.name,
+            product.category,
+            product.brand or "",
+            product.unit or "",
+        ]
+    ).lower()
+
+
+def matches_term(product, term: str, food_only: bool) -> bool:
+    searchable_text = product_text(product)
+
+    if food_only and any(blocked in searchable_text for blocked in NON_FOOD_TERMS):
+        return False
+
+    rule = TERM_RULES.get(term)
+    if rule:
+        if any(blocked in searchable_text for blocked in rule["excluded"]):
+            return False
+
+        return any(required in searchable_text for required in rule["required_any"])
+
+    return term in searchable_text
+
+
 def plan_bundle(
     budget: float,
     people: int,
@@ -77,10 +228,14 @@ def plan_bundle(
     products = load_products()
     query = f"{meal_type} {preference or ''}"
     terms = get_intent_terms(query)
+    food_only = is_food_plan(query)
 
     for meal, needs in MEAL_NEEDS.items():
         if meal in query.lower():
             terms.extend(needs)
+
+    if food_only:
+        terms = [term for term in terms if term not in INTENT_ONLY_TERMS]
 
     terms = list(dict.fromkeys(terms))
 
@@ -92,16 +247,7 @@ def plan_bundle(
         candidates = []
 
         for product in products:
-            searchable_text = " ".join(
-                [
-                    product.name,
-                    product.category,
-                    product.brand or "",
-                    product.unit or "",
-                ]
-            ).lower()
-
-            if term in searchable_text and product.id not in used_product_ids:
+            if matches_term(product, term, food_only) and product.id not in used_product_ids:
                 candidates.append(product)
 
         candidates.sort(key=lambda product: product.price)
@@ -138,7 +284,7 @@ def plan_bundle(
                         product_url=candidate.product_url,
                         recommended_quantity=recommended_quantity,
                         suggested_quantity=quantity,
-                        reason=f"Added for {term}; {quantity_reason}{budget_note}",
+                        reason=f"Suggested for {term}; {quantity_reason}{budget_note}",
                     )
                 )
                 used_product_ids.add(candidate.id)
