@@ -102,18 +102,23 @@ def create_pending_order(checkout: CheckoutCreate, user: CurrentUser) -> dict:
     )
     order = order_response.data[0]
 
-    for item in order_items:
-        item["order_id"] = order["id"]
-    supabase.table("order_items").insert(order_items).execute()
-    supabase.table("payments").insert(
-        {
-            "order_id": order["id"],
-            "provider": "sslcommerz",
-            "status": "created",
-            "amount": order["total"],
-            "currency": order["currency"],
-        }
-    ).execute()
+    try:
+        for item in order_items:
+            item["order_id"] = order["id"]
+        supabase.table("order_items").insert(order_items).execute()
+        supabase.table("payments").insert(
+            {
+                "order_id": order["id"],
+                "provider": "sslcommerz",
+                "status": "created",
+                "amount": order["total"],
+                "currency": order["currency"],
+            }
+        ).execute()
+    except Exception:
+        supabase.table("orders").delete().eq("id", order["id"]).execute()
+        raise
+
     return order
 
 
