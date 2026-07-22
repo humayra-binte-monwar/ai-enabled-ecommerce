@@ -1,4 +1,5 @@
 import { AuthPanel } from "@/components/AuthPanel";
+import { OrderHistory } from "@/components/OrderHistory";
 import { ProductCatalog } from "@/components/ProductCatalog";
 import { getProducts, type Product } from "@/lib/api";
 
@@ -29,8 +30,14 @@ export default async function Home() {
           </p>
         </div>
 
-        <div className="mb-8 max-w-md">
+        <div className="mb-8 grid max-w-3xl gap-6 md:grid-cols-2">
           <AuthPanel />
+          <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-950">Your orders</h2>
+            <div className="mt-4">
+              <OrderHistory />
+            </div>
+          </section>
         </div>
 
         {productsError ? (

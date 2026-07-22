@@ -32,6 +32,27 @@ export type CheckoutSession = {
   payment_url: string;
 };
 
+export type OrderItem = {
+  product_id: string;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  currency: string;
+  status: string;
+  created_at: string;
+  items: OrderItem[];
+};
+
 export async function createCheckout(
   checkout: CheckoutInput,
   accessToken: string
@@ -47,6 +68,21 @@ export async function createCheckout(
 
   if (!response.ok) {
     throw new Error("Failed to start checkout");
+  }
+
+  return response.json();
+}
+
+export async function getMyOrders(accessToken: string): Promise<Order[]> {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/orders/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load orders");
   }
 
   return response.json();
