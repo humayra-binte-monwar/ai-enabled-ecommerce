@@ -1,7 +1,8 @@
 import re
+import json
 
 from app.ai.guardrails import health_disclaimer, is_health_question
-from app.ai.prompts import FALLBACK_FOLLOW_UPS
+from app.ai.prompts import CHAT_SYNTHESIS_PROMPT, FALLBACK_FOLLOW_UPS, SYSTEM_PROMPT
 from app.ai.tools import (
     compare_prices_tool,
     optimize_cart_tool,
@@ -10,15 +11,21 @@ from app.ai.tools import (
     search_products_tool,
 )
 from app.core.settings import get_settings
-from app.schemas.ai import ChatCitation, ChatRequest, ChatResponse
+from app.schemas.ai import ChatCartAction, ChatCitation, ChatProductCard, ChatRequest, ChatResponse
 
 try:
     from langchain_openai import ChatOpenAI
 
     LANGCHAIN_AVAILABLE = True
+    LANGCHAIN_IMPORT_ERROR = ""
 except ImportError:
     ChatOpenAI = None
     LANGCHAIN_AVAILABLE = False
+    LANGCHAIN_IMPORT_ERROR = "Could not import langchain_openai"
+except Exception as error:
+    ChatOpenAI = None
+    LANGCHAIN_AVAILABLE = False
+    LANGCHAIN_IMPORT_ERROR = str(error)
 
 
 def extract_quantity(message: str) -> int:
@@ -33,7 +40,7 @@ def extract_budget(message: str) -> float | None:
 
 def looks_like_cart_add(message: str) -> bool:
     message_lower = message.lower()
-    return any(term in message_lower for term in ["add", "put"]) and "cart" in message_lower
+    return any(term in message_lower for term in ["add", "put", "buy"])
 
 
 def looks_like_bundle_request(message: str) -> bool:
@@ -65,6 +72,16 @@ def clean_search_query(message: str) -> str:
         "compare",
         "best value",
         "the",
+        "of",
+        "a",
+        "an",
+        "my",
+        "for",
+        "under",
+        "within",
+        "below",
+        "taka",
+        "tk",
         "please",
     ]
     for term in removable_phrases:
@@ -74,28 +91,105 @@ def clean_search_query(message: str) -> str:
     return cleaned or message
 
 
-def run_langchain_placeholder(request: ChatRequest) -> ChatResponse | None:
+def get_llm_client():
     settings = get_settings()
+    provider = settings.ai_provider.lower()
 
-    if not settings.ai_agent_enabled or not settings.openai_api_key or not LANGCHAIN_AVAILABLE:
+    if not settings.ai_agent_enabled or not LANGCHAIN_AVAILABLE:
         return None
 
-    # This keeps the first implementation safe: LangChain is configured here,
-    # while deterministic tools still handle product/cart grounding below.
-    _llm = ChatOpenAI(
-        model=settings.openai_chat_model,
-        api_key=settings.openai_api_key,
-        temperature=0.2,
-    )
+    if provider == "groq" and settings.groq_api_key:
+        return ChatOpenAI(
+            model=settings.groq_chat_model,
+            api_key=settings.groq_api_key,
+            base_url=settings.groq_base_url,
+            temperature=0.2,
+        )
+
+    if provider == "xai" and settings.xai_api_key:
+        return ChatOpenAI(
+            model=settings.xai_chat_model,
+            api_key=settings.xai_api_key,
+            base_url=settings.xai_base_url,
+            temperature=0.2,
+        )
+
+    if provider == "openai" and settings.openai_api_key:
+        return ChatOpenAI(
+            model=settings.openai_chat_model,
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url,
+            temperature=0.2,
+        )
+
     return None
 
 
+def products_for_prompt(products: list[ChatProductCard]) -> list[dict]:
+    return [
+        {
+            "id": product.id,
+            "name": product.name,
+            "category": product.category,
+            "price": product.price,
+            "unit": product.unit,
+            "reason": product.reason,
+        }
+        for product in products[:5]
+    ]
+
+
+def cart_actions_for_prompt(cart_actions: list[ChatCartAction]) -> list[dict]:
+    return [
+        {
+            "type": action.type,
+            "product_id": action.product_id,
+            "product_name": action.product_name,
+            "quantity": action.quantity,
+            "requires_confirmation": action.requires_confirmation,
+            "message": action.message,
+        }
+        for action in cart_actions
+    ]
+
+
+def synthesize_with_llm(
+    user_message: str,
+    intent: str,
+    default_message: str,
+    products: list[ChatProductCard],
+    cart_actions: list[ChatCartAction],
+    tools_used: list[str],
+) -> tuple[str, bool]:
+    llm = get_llm_client()
+
+    if not llm:
+        return default_message, True
+
+    prompt_payload = {
+        "user_message": user_message,
+        "detected_intent": intent,
+        "tools_used": tools_used,
+        "default_message": default_message,
+        "products": products_for_prompt(products),
+        "cart_actions": cart_actions_for_prompt(cart_actions),
+    }
+
+    try:
+        response = llm.invoke(
+            [
+                ("system", SYSTEM_PROMPT),
+                ("system", CHAT_SYNTHESIS_PROMPT),
+                ("user", json.dumps(prompt_payload)),
+            ]
+        )
+    except Exception:
+        return default_message, True
+
+    return str(response.content), False
+
+
 def run_chat(request: ChatRequest) -> ChatResponse:
-    langchain_response = run_langchain_placeholder(request)
-
-    if langchain_response:
-        return langchain_response
-
     message = request.message.strip()
     query = clean_search_query(message)
     tools_used = []
@@ -113,8 +207,18 @@ def run_chat(request: ChatRequest) -> ChatResponse:
                 if matches:
                     products.append(matches[0])
 
+        default_message = optimized["summary"]
+        response_message, used_fallback = synthesize_with_llm(
+            user_message=message,
+            intent=intent,
+            default_message=default_message,
+            products=products,
+            cart_actions=cart_actions,
+            tools_used=tools_used,
+        )
+
         return ChatResponse(
-            message=optimized["summary"],
+            message=response_message,
             intent=intent,
             products=products,
             citations=[
@@ -123,7 +227,7 @@ def run_chat(request: ChatRequest) -> ChatResponse:
             ],
             follow_up_suggestions=FALLBACK_FOLLOW_UPS,
             tools_used=tools_used,
-            fallback=True,
+            fallback=used_fallback,
         )
 
     if looks_like_bundle_request(message):
@@ -141,8 +245,18 @@ def run_chat(request: ChatRequest) -> ChatResponse:
             if matches:
                 products.append(matches[0])
 
+        default_message = f"{bundle['summary']} Estimated total: Tk {bundle['estimated_total']}."
+        response_message, used_fallback = synthesize_with_llm(
+            user_message=message,
+            intent=intent,
+            default_message=default_message,
+            products=products,
+            cart_actions=cart_actions,
+            tools_used=tools_used,
+        )
+
         return ChatResponse(
-            message=f"{bundle['summary']} Estimated total: Tk {bundle['estimated_total']}.",
+            message=response_message,
             intent=intent,
             products=products,
             citations=[
@@ -151,7 +265,7 @@ def run_chat(request: ChatRequest) -> ChatResponse:
             ],
             follow_up_suggestions=["Add this bundle to my cart", "Make it cheaper", "Make it healthier"],
             tools_used=tools_used,
-            fallback=True,
+            fallback=used_fallback,
         )
 
     if should_compare_prices(message):
@@ -176,17 +290,26 @@ def run_chat(request: ChatRequest) -> ChatResponse:
         prefix = ""
 
     if products:
-        message_text = f"{prefix}I found {len(products)} matching product(s)."
+        default_message = f"{prefix}I found {len(products)} matching product(s)."
         if cart_actions:
-            message_text += " I prepared a cart action for you to confirm."
+            default_message += " I prepared a cart action for you to confirm."
     else:
-        message_text = (
+        default_message = (
             f"{prefix}I could not find a strong catalog match yet. Try asking for a product, "
             "category, budget, or cart goal."
         )
 
+    response_message, used_fallback = synthesize_with_llm(
+        user_message=message,
+        intent=intent,
+        default_message=default_message,
+        products=products,
+        cart_actions=cart_actions,
+        tools_used=tools_used,
+    )
+
     return ChatResponse(
-        message=message_text,
+        message=response_message,
         intent=intent,
         products=products,
         cart_actions=cart_actions,
@@ -196,5 +319,5 @@ def run_chat(request: ChatRequest) -> ChatResponse:
         ],
         follow_up_suggestions=FALLBACK_FOLLOW_UPS,
         tools_used=tools_used,
-        fallback=True,
+        fallback=used_fallback,
     )

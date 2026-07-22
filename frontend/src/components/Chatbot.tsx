@@ -1,12 +1,14 @@
 "use client";
 
 import {
+  getAiProviderStatus,
+  type AiProviderStatus,
   type ChatCartAction,
   sendChatMessage,
   type ChatProductCard,
   type Product,
 } from "@/lib/api";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type CartItem = Product & {
   quantity: number;
@@ -23,6 +25,7 @@ type ChatMessage = {
   products?: ChatProductCard[];
   cartActions?: ChatCartAction[];
   toolsUsed?: string[];
+  fallback?: boolean;
 };
 
 function createSessionId() {
@@ -32,6 +35,8 @@ function createSessionId() {
 export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
   const [sessionId] = useState(createSessionId);
   const [message, setMessage] = useState("");
+  const [providerStatus, setProviderStatus] =
+    useState<AiProviderStatus | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -51,6 +56,34 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
     ],
     []
   );
+
+  const providerLabel = providerStatus?.client_ready
+    ? `${providerStatus.provider.toUpperCase()} ${providerStatus.model}`
+    : "Fallback mode";
+
+  const providerStatusClass = providerStatus?.client_ready
+    ? "bg-emerald-50 text-emerald-700"
+    : "bg-amber-50 text-amber-700";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getAiProviderStatus()
+      .then((status) => {
+        if (isMounted) {
+          setProviderStatus(status);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProviderStatus(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function submitChat(nextMessage = message) {
     const trimmedMessage = nextMessage.trim();
@@ -88,6 +121,7 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
           products: response.products,
           cartActions: response.cart_actions,
           toolsUsed: response.tools_used,
+          fallback: response.fallback,
         },
       ]);
     } catch {
@@ -103,13 +137,25 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
         <div>
           <h2 className="text-lg font-bold text-slate-950">Grocery Copilot</h2>
           <p className="mt-1 text-sm text-slate-600">
-            First agent step: chat routing, tool-shaped responses, and cart action previews.
+            Groq writes the answer after grounded catalog tools choose products and cart actions.
           </p>
         </div>
-        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-          LangChain-ready
+        <span
+          className={`rounded px-2 py-1 text-xs font-medium ${providerStatusClass}`}
+        >
+          {providerLabel}
         </span>
       </div>
+
+      {providerStatus && !providerStatus.client_ready ? (
+        <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          Groq is not active yet. Check `AI_AGENT_ENABLED`, `GROQ_API_KEY`, and
+          backend dependencies.
+          {providerStatus.langchain_import_error ? (
+            <span> Import issue: {providerStatus.langchain_import_error}</span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mb-4 max-h-96 space-y-3 overflow-y-auto rounded-md bg-slate-50 p-3">
         {messages.map((item, index) => (
@@ -126,6 +172,9 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
             {item.toolsUsed?.length ? (
               <p className="mt-2 text-xs font-medium text-slate-500">
                 Tools used: {item.toolsUsed.join(", ")}
+                {typeof item.fallback === "boolean"
+                  ? ` | ${item.fallback ? "fallback mode" : "Groq response"}`
+                  : ""}
               </p>
             ) : null}
 

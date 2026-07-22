@@ -8,6 +8,20 @@ from app.services.cart_optimizer_service import optimize_cart
 from app.services.product_finder_service import find_products
 from app.services.product_service import get_product_by_id, load_products
 
+SEARCH_STOP_WORDS = {
+    "a",
+    "an",
+    "and",
+    "for",
+    "from",
+    "my",
+    "of",
+    "the",
+    "to",
+    "under",
+    "with",
+}
+
 
 def product_to_chat_card(product, reason: str | None = None) -> ChatProductCard:
     return ChatProductCard(
@@ -40,13 +54,30 @@ def search_products_tool(query: str) -> list[ChatProductCard]:
 
 
 def compare_prices_tool(query: str, limit: int = 5) -> list[ChatProductCard]:
-    query_lower = query.lower()
+    query_terms = [
+        term
+        for term in query.lower().split()
+        if len(term) > 1 and term not in SEARCH_STOP_WORDS
+    ]
+
+    if not query_terms:
+        return []
+
     products = [
         product
         for product in load_products()
-        if query_lower in product.name.lower()
-        or query_lower in product.category.lower()
-        or (product.brand and query_lower in product.brand.lower())
+        if any(
+            term
+            in " ".join(
+                [
+                    product.name,
+                    product.category,
+                    product.brand or "",
+                    product.unit or "",
+                ]
+            ).lower()
+            for term in query_terms
+        )
     ]
 
     products.sort(key=lambda product: product.price)

@@ -3,7 +3,13 @@ from fastapi import APIRouter
 from app.services.bundle_planner_service import plan_bundle
 from app.services.cart_optimizer_service import optimize_cart
 from app.services.product_finder_service import find_products
-from app.ai.agent import run_chat
+from app.ai.agent import (
+    LANGCHAIN_AVAILABLE,
+    LANGCHAIN_IMPORT_ERROR,
+    get_llm_client,
+    run_chat,
+)
+from app.core.settings import get_settings
 from app.schemas.ai import (
     BundlePlannerRequest,
     BundlePlannerResponse,
@@ -42,3 +48,22 @@ def cart_optimizer(request: CartOptimizerRequest):
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
     return run_chat(request)
+
+
+@router.get("/provider-status")
+def provider_status():
+    settings = get_settings()
+
+    return {
+        "provider": settings.ai_provider,
+        "agent_enabled": settings.ai_agent_enabled,
+        "model": settings.groq_chat_model
+        if settings.ai_provider == "groq"
+        else settings.openai_chat_model,
+        "langchain_available": LANGCHAIN_AVAILABLE,
+        "langchain_import_error": LANGCHAIN_IMPORT_ERROR,
+        "has_provider_key": bool(settings.groq_api_key)
+        if settings.ai_provider == "groq"
+        else bool(settings.openai_api_key),
+        "client_ready": bool(get_llm_client()),
+    }

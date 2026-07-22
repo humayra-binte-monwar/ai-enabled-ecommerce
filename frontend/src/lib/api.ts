@@ -46,15 +46,18 @@ export async function createOrder(order: OrderInput) {
   return response.json();
 }
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8001";
 const REQUEST_TIMEOUT_MS = 8000;
+const CHAT_TIMEOUT_MS = 30000;
 
 async function fetchWithTimeout(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs = REQUEST_TIMEOUT_MS
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(url, {
@@ -260,18 +263,47 @@ export type ChatResponse = {
   fallback: boolean;
 };
 
+export type AiProviderStatus = {
+  provider: string;
+  agent_enabled: boolean;
+  model: string;
+  langchain_available: boolean;
+  langchain_import_error: string;
+  has_provider_key: boolean;
+  client_ready: boolean;
+};
+
+export async function getAiProviderStatus(): Promise<AiProviderStatus> {
+  const response = await fetchWithTimeout(
+    `${API_BASE_URL}/api/ai/provider-status`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch AI provider status");
+  }
+
+  return response.json();
+}
+
 export async function sendChatMessage(input: {
   session_id: string;
   message: string;
   cart_items: ChatCartItemInput[];
 }): Promise<ChatResponse> {
-  const response = await fetchWithTimeout(`${API_BASE_URL}/api/ai/chat`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetchWithTimeout(
+    `${API_BASE_URL}/api/ai/chat`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
     },
-    body: JSON.stringify(input),
-  });
+    CHAT_TIMEOUT_MS
+  );
 
   if (!response.ok) {
     throw new Error("Failed to send chat message");

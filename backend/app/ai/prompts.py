@@ -17,3 +17,11 @@ FALLBACK_FOLLOW_UPS = [
     "Make a 3-day grocery bundle for 2 people",
     "Review my cart for healthier choices",
 ]
+
+CHAT_SYNTHESIS_PROMPT = """
+Write the final chat response for Grocery Copilot.
+
+Use only the provided tool results. Do not invent product names, prices, stock,
+discounts, or health facts. If cart actions are provided, say that the user
+should confirm the action. Keep the answer concise and practical.
+"""
