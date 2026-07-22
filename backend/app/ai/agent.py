@@ -53,7 +53,21 @@ def should_compare_prices(message: str) -> bool:
 
 def clean_search_query(message: str) -> str:
     cleaned = message.lower()
-    for term in ["add", "put", "to my cart", "cart", "cheapest", "lowest price", "compare", "best value"]:
+    removable_phrases = [
+        "add",
+        "put",
+        "to my cart",
+        "to cart",
+        "my cart",
+        "cart",
+        "cheapest",
+        "lowest price",
+        "compare",
+        "best value",
+        "the",
+        "please",
+    ]
+    for term in removable_phrases:
         cleaned = cleaned.replace(term, " ")
     cleaned = re.sub(r"\b\d+\b", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
@@ -93,9 +107,20 @@ def run_chat(request: ChatRequest) -> ChatResponse:
         intent = "cart_optimizer"
         tools_used.append("optimize_cart")
         optimized = optimize_cart_tool(request.cart_items, goal=message)
+        for suggestion in optimized["suggestions"]:
+            if suggestion.product_name:
+                matches = search_products_tool(suggestion.product_name)
+                if matches:
+                    products.append(matches[0])
+
         return ChatResponse(
             message=optimized["summary"],
             intent=intent,
+            products=products,
+            citations=[
+                ChatCitation(product_id=product.id, source_url=product.product_url)
+                for product in products
+            ],
             follow_up_suggestions=FALLBACK_FOLLOW_UPS,
             tools_used=tools_used,
             fallback=True,

@@ -14,7 +14,7 @@ type CartItem = Product & {
 
 type ChatbotProps = {
   cart: CartItem[];
-  onAddToCart: (product: ChatProductCard) => void;
+  onAddToCart: (product: ChatProductCard, quantity?: number) => void;
 };
 
 type ChatMessage = {
@@ -143,7 +143,9 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
                     {action.product ? (
                       <button
                         type="button"
-                        onClick={() => onAddToCart(action.product!)}
+                        onClick={() =>
+                          onAddToCart(action.product!, action.quantity ?? 1)
+                        }
                         className="mt-2 h-8 w-full rounded-md bg-red-600 text-xs font-semibold text-white"
                       >
                         Confirm Add
