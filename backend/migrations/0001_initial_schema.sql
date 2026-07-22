@@ -22,6 +22,23 @@ create table if not exists public.products (
     updated_at timestamptz not null default now()
 );
 
+-- The prototype created the initial products table manually. Keep this
+-- migration safe to run against that existing table as well as a new project.
+alter table public.products add column if not exists source_id text;
+alter table public.products add column if not exists slug text;
+alter table public.products add column if not exists normalized_category text;
+alter table public.products add column if not exists product_type text;
+alter table public.products add column if not exists old_price numeric(12, 2);
+alter table public.products add column if not exists tags text[] not null default '{}';
+alter table public.products add column if not exists scraped_at timestamptz not null default now();
+alter table public.products add column if not exists created_at timestamptz not null default now();
+alter table public.products add column if not exists updated_at timestamptz not null default now();
+
+create unique index if not exists products_source_id_unique_idx
+    on public.products (source_id) where source_id is not null;
+create unique index if not exists products_slug_unique_idx
+    on public.products (slug) where slug is not null;
+
 create index if not exists products_category_idx on public.products (normalized_category);
 create index if not exists products_price_idx on public.products (price);
 create index if not exists products_name_idx on public.products using gin (to_tsvector('simple', name));
@@ -77,6 +94,20 @@ create table if not exists public.orders (
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
+
+alter table public.orders add column if not exists subtotal numeric(12, 2);
+alter table public.orders add column if not exists delivery_fee numeric(12, 2) not null default 0;
+alter table public.orders add column if not exists currency text not null default 'BDT';
+alter table public.orders add column if not exists idempotency_key uuid default gen_random_uuid();
+update public.orders
+set subtotal = total
+where subtotal is null;
+update public.orders
+set idempotency_key = gen_random_uuid()
+where idempotency_key is null;
+alter table public.orders alter column idempotency_key set not null;
+create unique index if not exists orders_idempotency_key_unique_idx
+    on public.orders (idempotency_key);
 
 create index if not exists orders_user_created_idx on public.orders (user_id, created_at desc);
 
