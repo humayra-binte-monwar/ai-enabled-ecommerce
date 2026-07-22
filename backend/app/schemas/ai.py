@@ -37,6 +37,7 @@ class BundlePlannerItem(BaseModel):
     unit: str | None = None
     image_url: str | None = None
     product_url: str | None = None
+    recommended_quantity: int
     suggested_quantity: int
     reason: str
 

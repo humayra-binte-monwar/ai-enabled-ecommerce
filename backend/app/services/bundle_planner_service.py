@@ -86,12 +86,13 @@ def plan_bundle(
         candidates.sort(key=lambda product: product.price)
 
         for candidate in candidates:
-            quantity, quantity_reason = estimate_quantity(
+            recommended_quantity, quantity_reason = estimate_quantity(
                 candidate.name,
                 term,
                 people,
                 duration_days,
             )
+            quantity = recommended_quantity
             line_total = candidate.price * quantity
 
             while quantity > 1 and estimated_total + line_total > budget:
@@ -99,6 +100,12 @@ def plan_bundle(
                 line_total = candidate.price * quantity
 
             if estimated_total + line_total <= budget:
+                budget_note = ""
+                if quantity < recommended_quantity:
+                    budget_note = (
+                        f"; budget-fit suggestion reduced from {recommended_quantity} to {quantity}"
+                    )
+
                 selected_items.append(
                     BundlePlannerItem(
                         id=candidate.id,
@@ -108,8 +115,9 @@ def plan_bundle(
                         unit=candidate.unit,
                         image_url=candidate.image_url,
                         product_url=candidate.product_url,
+                        recommended_quantity=recommended_quantity,
                         suggested_quantity=quantity,
-                        reason=f"Added for {term}; {quantity_reason}",
+                        reason=f"Added for {term}; {quantity_reason}{budget_note}",
                     )
                 )
                 used_product_ids.add(candidate.id)

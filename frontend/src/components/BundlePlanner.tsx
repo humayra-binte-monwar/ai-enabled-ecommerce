@@ -176,11 +176,21 @@ export function BundlePlanner({
                 <p className="mt-1 text-sm font-bold text-red-700">
                   Tk {item.price}
                 </p>
-                <p className="mt-1 text-xs font-semibold text-slate-900">
-                  Suggested: {item.suggested_quantity} item
-                  {item.suggested_quantity === 1 ? "" : "s"}
-                </p>
+                {item.suggested_quantity < item.recommended_quantity ? (
+                  <p className="mt-1 text-xs font-semibold text-slate-900">
+                    Planner suggests: {item.suggested_quantity} of recommended{" "}
+                    {item.recommended_quantity}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs font-semibold text-slate-900">
+                    Planner suggests: {item.recommended_quantity} item
+                    {item.recommended_quantity === 1 ? "" : "s"}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-slate-600">{item.reason}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Cart quantity updates only after you add this item.
+                </p>
 
                 {quantity > 0 ? (
                   <div className="mt-3 flex h-9 items-center justify-between rounded-md border border-red-200 bg-white px-2">
