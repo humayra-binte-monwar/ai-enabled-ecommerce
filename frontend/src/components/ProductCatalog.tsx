@@ -152,8 +152,12 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
       }, session.access_token);
 
       window.location.assign(checkout.payment_url);
-    } catch {
-      setOrderError("Could not place order. Please try again.");
+    } catch (error) {
+      setOrderError(
+        error instanceof Error
+          ? error.message
+          : "Could not place order. Please try again."
+      );
     } finally {
       setIsSubmittingOrder(false);
     }

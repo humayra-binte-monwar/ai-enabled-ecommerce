@@ -1,7 +1,10 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -32,7 +35,7 @@ class Settings(BaseSettings):
     sslcommerz_store_password: str = ""
     sslcommerz_sandbox: bool = True
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env")
 
 
 @lru_cache

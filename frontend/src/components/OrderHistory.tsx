@@ -33,8 +33,12 @@ export function OrderHistory() {
 
       try {
         setOrders(await getMyOrders(session.access_token));
-      } catch {
-        setError("Could not load your order history right now.");
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Could not load your order history right now."
+        );
       } finally {
         setIsLoading(false);
       }

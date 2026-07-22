@@ -53,21 +53,38 @@ export type Order = {
   items: OrderItem[];
 };
 
+async function getErrorMessage(response: Response, fallback: string) {
+  try {
+    const payload = await response.json();
+    if (typeof payload.detail === "string") {
+      return payload.detail;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
 export async function createCheckout(
   checkout: CheckoutInput,
   accessToken: string
 ): Promise<CheckoutSession> {
-  const response = await fetch(`${API_BASE_URL}/api/orders/checkout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
+  const response = await fetchWithTimeout(
+    `${API_BASE_URL}/api/orders/checkout`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(checkout),
     },
-    body: JSON.stringify(checkout),
-  });
+    30000
+  );
 
   if (!response.ok) {
-    throw new Error("Failed to start checkout");
+    throw new Error(await getErrorMessage(response, "Failed to start checkout"));
   }
 
   return response.json();
@@ -82,7 +99,7 @@ export async function getMyOrders(accessToken: string): Promise<Order[]> {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to load orders");
+    throw new Error(await getErrorMessage(response, "Failed to load orders"));
   }
 
   return response.json();
