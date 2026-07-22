@@ -13,6 +13,9 @@ class ProductFinderProduct(BaseModel):
     unit: str | None = None
     image_url: str | None = None
     product_url: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    normalized_category: str | None = None
+    product_type: str | None = None
     reason: str
 
 
@@ -104,6 +107,9 @@ class ChatProductCard(BaseModel):
     unit: str | None = None
     image_url: str | None = None
     product_url: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    normalized_category: str | None = None
+    product_type: str | None = None
     reason: str | None = None
 
 

@@ -231,7 +231,7 @@ export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) 
                     <p className="font-semibold text-slate-900">{product.name}</p>
                     <div className="mt-1 flex items-center justify-between gap-3">
                       <span className="text-xs text-slate-600">
-                        {product.category}
+                        {product.normalized_category ?? product.category}
                       </span>
                       <span className="text-sm font-bold text-red-700">
                         Tk {product.price}
@@ -239,6 +239,18 @@ export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) 
                     </div>
                     {product.reason ? (
                       <p className="mt-1 text-xs text-slate-500">{product.reason}</p>
+                    ) : null}
+                    {product.tags?.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {product.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                          >
+                            {tag.replaceAll("_", " ")}
+                          </span>
+                        ))}
+                      </div>
                     ) : null}
                     <button
                       type="button"

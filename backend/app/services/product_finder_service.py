@@ -20,6 +20,18 @@ INTENT_KEYWORDS = {
     "eid": ["rice", "semai", "milk", "sugar", "spice", "oil", "ghee"],
     "essentials": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap"],
     "family": ["rice", "oil", "dal", "milk", "egg", "bread", "soap"],
+    "frozen": [
+        "kazi",
+        "chicken strip",
+        "chicken strips",
+        "nugget",
+        "nuggets",
+        "sausage",
+        "paratha",
+        "fries",
+        "french fry",
+        "frozen",
+    ],
     "healthy": ["dal", "vegetable", "egg", "milk", "oats", "fruit", "atta"],
     "iftar": ["dates", "juice", "chola", "oil", "puffed rice", "noodles", "fruit"],
     "kids": ["milk", "juice", "biscuit", "cake", "chocolate", "noodles", "cereal"],
@@ -43,6 +55,9 @@ QUERY_SYNONYMS = {
     "cook": "cooking",
     "groceries": "essentials",
     "grocery": "essentials",
+    "freezer": "frozen",
+    "frozen food": "frozen",
+    "frozen foods": "frozen",
     "kid": "kids",
     "low": "affordable",
     "party": "picnic",
@@ -57,6 +72,7 @@ STOP_WORDS = {
     "budget",
     "find",
     "for",
+    "foods",
     "give",
     "good",
     "items",
@@ -68,10 +84,13 @@ STOP_WORDS = {
     "some",
     "taka",
     "that",
+    "there",
     "under",
     "want",
+    "what",
     "with",
     "within",
+    "you",
 }
 
 NON_FOOD_TERMS = {
@@ -177,6 +196,9 @@ def find_products(query: str) -> dict:
             [
                 product.name,
                 product.category,
+                product.normalized_category or "",
+                product.product_type or "",
+                " ".join(product.tags),
                 product.brand or "",
                 product.unit or "",
             ]
@@ -218,6 +240,9 @@ def find_products(query: str) -> dict:
             unit=product.unit,
             image_url=product.image_url,
             product_url=product.product_url,
+            tags=product.tags,
+            normalized_category=product.normalized_category,
+            product_type=product.product_type,
             reason=(
                 f"Matched: {', '.join(matched_terms)}"
                 if matched_terms

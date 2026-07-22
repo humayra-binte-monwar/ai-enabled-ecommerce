@@ -292,12 +292,27 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
                   </div>
                 </Link>
 
-                <p className="text-xs text-slate-500">{product.category}</p>
+                <p className="text-xs text-slate-500">
+                  {product.normalized_category ?? product.category}
+                </p>
                 <Link href={`/products/${product.id}`}>
                   <h2 className="mt-1 line-clamp-2 min-h-12 text-sm font-semibold text-slate-900 hover:text-red-700">
                     {product.name}
                   </h2>
                 </Link>
+
+                {product.tags?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {product.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                      >
+                        {tag.replaceAll("_", " ")}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
 
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-lg font-bold text-red-700">

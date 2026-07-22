@@ -33,6 +33,28 @@ def list_products(
     return products
 
 
+@router.get("/tags")
+def product_tags():
+    products = load_products()
+    tags = sorted({tag for product in products for tag in product.tags})
+    categories = sorted(
+        {
+            product.normalized_category
+            for product in products
+            if product.normalized_category
+        }
+    )
+    product_types = sorted(
+        {product.product_type for product in products if product.product_type}
+    )
+
+    return {
+        "tags": tags,
+        "normalized_categories": categories,
+        "product_types": product_types,
+    }
+
+
 @router.get("/{product_id}", response_model=Product)
 def product_detail(product_id: str):
     product = get_product_by_id(product_id)

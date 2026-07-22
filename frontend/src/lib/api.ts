@@ -9,6 +9,9 @@ export type Product = {
   product_url: string | null;
   stock_status: string;
   scraped_at?: string;
+  tags?: string[];
+  normalized_category?: string | null;
+  product_type?: string | null;
 };
 
 export type OrderItemInput = {
@@ -104,6 +107,9 @@ export type ProductFinderProduct = {
   unit: string | null;
   image_url: string | null;
   product_url: string | null;
+  tags?: string[];
+  normalized_category?: string | null;
+  product_type?: string | null;
   reason: string;
 };
 
@@ -240,6 +246,9 @@ export type ChatProductCard = {
   unit: string | null;
   image_url: string | null;
   product_url: string | null;
+  tags?: string[];
+  normalized_category?: string | null;
+  product_type?: string | null;
   reason: string | null;
 };
 

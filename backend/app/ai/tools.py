@@ -32,6 +32,9 @@ def chat_card_to_action_product(product: ChatProductCard) -> ChatProductCard:
         unit=product.unit,
         image_url=product.image_url,
         product_url=product.product_url,
+        tags=product.tags,
+        normalized_category=product.normalized_category,
+        product_type=product.product_type,
         reason="Selected for cart action",
     )
 
@@ -45,6 +48,9 @@ def product_to_chat_card(product, reason: str | None = None) -> ChatProductCard:
         unit=product.unit,
         image_url=product.image_url,
         product_url=product.product_url,
+        tags=product.tags,
+        normalized_category=product.normalized_category,
+        product_type=product.product_type,
         reason=reason,
     )
 
@@ -60,6 +66,9 @@ def search_products_tool(query: str) -> list[ChatProductCard]:
             unit=product.unit,
             image_url=product.image_url,
             product_url=product.product_url,
+            tags=product.tags,
+            normalized_category=product.normalized_category,
+            product_type=product.product_type,
             reason=product.reason,
         )
         for product in result["products"]
@@ -85,6 +94,9 @@ def compare_prices_tool(query: str, limit: int = 5) -> list[ChatProductCard]:
                 [
                     product.name,
                     product.category,
+                    product.normalized_category or "",
+                    product.product_type or "",
+                    " ".join(product.tags),
                     product.brand or "",
                     product.unit or "",
                 ]
