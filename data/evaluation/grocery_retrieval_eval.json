@@ -11,7 +11,7 @@
   {"query": "liquid laundry detergent", "expected_product_ids": ["rin-liquid-detergent-400ml-local"]},
   {"query": "hair fall shampoo", "expected_product_ids": ["dove-hair-fall-rescue-shampoo-650ml"]},
   {"query": "instant masala noodles", "expected_product_ids": ["maggi-2-minute-noodles-masala-744gm-12pcs-pack", "fresh-instant-noodles-masala-flavor-496gm"]},
-  {"query": "whole wheat atta", "expected_product_ids": ["aci-nutrilife-brown-atta-2kg", "aci-brown-atta-1kg"]},
+  {"query": "whole wheat atta", "expected_product_ids": ["teer-whole-wheat-atta-2kg", "fresh-whole-wheat-atta-2kg", "aci-nutrilife-brown-atta-2kg", "aci-brown-atta-1kg"]},
   {"query": "refined sugar", "expected_product_ids": ["fresh-refined-sugar-1kg"]},
   {"query": "iodized cooking salt", "expected_product_ids": ["aci-pure-salt-1kg", "fresh-super-premium-salt-1kg"]}
 ]

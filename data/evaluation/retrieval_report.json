@@ -1,0 +1,226 @@
+{
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "queries": 15,
+  "recall_at_5": 1.0,
+  "mrr_at_5": 0.9333,
+  "results": [
+    {
+      "query": "premium chinigura rice",
+      "expected_product_ids": [
+        "rupchanda-chinigura-rice-1kg"
+      ],
+      "returned_product_ids": [
+        "rupchanda-chinigura-rice-1kg",
+        "bpm-rice-flour-1kg",
+        "horina-chingri-fresh-local-cultured",
+        "aci-pure-fortified-jeerashail-rice-5kg",
+        "shwapno-rice-flour-1kg"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "fortified jeerashail rice",
+      "expected_product_ids": [
+        "aci-pure-fortified-jeerashail-rice-5kg"
+      ],
+      "returned_product_ids": [
+        "aci-pure-fortified-jeerashail-rice-5kg",
+        "aci-pure-fortified-katari-rice-5kg",
+        "ifad-wellness-fortified-atta-1kg",
+        "rupchanda-chinigura-rice-1kg",
+        "bpm-rice-flour-1kg"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "moshur lentils",
+      "expected_product_ids": [
+        "moshur-dal-loose-standard-kg"
+      ],
+      "returned_product_ids": [
+        "moshur-dal-loose-standard-kg",
+        "pran-naga-chilli-pickle-300gm",
+        "pran-burmese-chutney-mango-300gm",
+        "aci-pure-garam-masala-15gm",
+        "maggi-shaad-e-magic-1pcs"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "full cream milk powder",
+      "expected_product_ids": [
+        "pusti-plus-instant-full-cream-milk-powder-500gm",
+        "fresh-instant-full-cream-milk-powder-500gm"
+      ],
+      "returned_product_ids": [
+        "fresh-instant-full-cream-milk-powder-500gm",
+        "fresh-instant-full-cream-milk-powder-1000gm",
+        "red-cow-instant-full-cream-milk-powder-500gm",
+        "happy-cow-instant-milk-powder-500gm",
+        "happy-cow-instant-milk-powder-1kg"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "loose eggs",
+      "expected_product_ids": [
+        "egg-loose"
+      ],
+      "returned_product_ids": [
+        "egg-loose",
+        "golden-harvest-pop-chicken-250gm",
+        "ag-food-chicken-mini-spring-roll-250gm-23-25pcs",
+        "dekko-egg-noodles-150-20gm-buy3-get1-free",
+        "paragon-chicken-mini-spring-roll-300gm-18-20pcs"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "family blend tea",
+      "expected_product_ids": [
+        "seylon-family-blend-tea-400gm",
+        "seylon-family-blend-tea-500gm"
+      ],
+      "returned_product_ids": [
+        "seylon-family-blend-tea-400gm",
+        "seylon-family-blend-tea-500gm",
+        "fresh-premium-masala-tea-50gm",
+        "fresh-premium-green-tea-37-5gm",
+        "seylon-pyramid-tea-100gm-bag"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "green tea bags",
+      "expected_product_ids": [
+        "fresh-premium-green-tea-37-5gm"
+      ],
+      "returned_product_ids": [
+        "ispahani-mirzapore-bestleaf-400gm-poly-bag",
+        "fresh-premium-green-tea-37-5gm",
+        "seylon-pyramid-tea-100gm-bag",
+        "seylon-gold-blend-100gm-tea-bag",
+        "fresh-premium-masala-tea-50gm"
+      ],
+      "first_relevant_rank": 2
+    },
+    {
+      "query": "espresso coffee",
+      "expected_product_ids": [
+        "davidoff-espresso-coffee-90-10gm"
+      ],
+      "returned_product_ids": [
+        "davidoff-espresso-coffee-90-10gm",
+        "nescafe-classic-200-20gm-jar",
+        "seylon-family-blend-tea-500gm",
+        "nestle-coffee-mate-450gm-bib",
+        "seylon-family-blend-tea-400gm"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "washing powder detergent",
+      "expected_product_ids": [
+        "wheel-2in1-clean-fresh-detergent-2kg",
+        "wheel-clean-fresh-2in1-detergent-powder-500gm"
+      ],
+      "returned_product_ids": [
+        "rin-liquid-detergent-400ml-local",
+        "wheel-clean-fresh-2in1-detergent-powder-500gm",
+        "wheel-2in1-clean-fresh-detergent-2kg",
+        "rok-bleaching-powder-200gm",
+        "rok-bleaching-powder-500gm"
+      ],
+      "first_relevant_rank": 2
+    },
+    {
+      "query": "liquid laundry detergent",
+      "expected_product_ids": [
+        "rin-liquid-detergent-400ml-local"
+      ],
+      "returned_product_ids": [
+        "rin-liquid-detergent-400ml-local",
+        "surf-excel-matic-liquid-top-load-500ml",
+        "wheel-clean-fresh-2in1-detergent-powder-500gm",
+        "wheel-2in1-clean-fresh-detergent-2kg",
+        "marino-water-bottle-a01-900ml"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "hair fall shampoo",
+      "expected_product_ids": [
+        "dove-hair-fall-rescue-shampoo-650ml"
+      ],
+      "returned_product_ids": [
+        "dove-hair-fall-rescue-shampoo-650ml",
+        "havoc-deodorant-spray-200ml",
+        "kool-body-spray-150ml",
+        "kool-deodorant-body-spray-blue-150ml",
+        "blue-lady-ed-parfum-40ml"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "instant masala noodles",
+      "expected_product_ids": [
+        "maggi-2-minute-noodles-masala-744gm-12pcs-pack",
+        "fresh-instant-noodles-masala-flavor-496gm"
+      ],
+      "returned_product_ids": [
+        "fresh-instant-noodles-masala-flavor-496gm",
+        "olympic-foodie-instant-masala-noodles-496gm-buy2-get1-free",
+        "maggi-2-minute-noodles-masala-family-fun-pack-992gm-16pcs-pack",
+        "maggi-2-minute-noodles-masala-744gm-12pcs-pack",
+        "maggi-2-minute-noodles-masala-496-124gm-8pcs-pack"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "whole wheat atta",
+      "expected_product_ids": [
+        "teer-whole-wheat-atta-2kg",
+        "fresh-whole-wheat-atta-2kg",
+        "aci-nutrilife-brown-atta-2kg",
+        "aci-brown-atta-1kg"
+      ],
+      "returned_product_ids": [
+        "teer-whole-wheat-atta-2kg",
+        "fresh-whole-wheat-atta-2kg",
+        "aci-pure-corn-flour-150gm",
+        "foster-clark-s-corn-flour-200gm-packet",
+        "foster-clark-s-corn-flour-400gm-packet"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "refined sugar",
+      "expected_product_ids": [
+        "fresh-refined-sugar-1kg"
+      ],
+      "returned_product_ids": [
+        "fresh-refined-sugar-1kg",
+        "ag-food-red-wheat-rooti-800gm",
+        "dabur-honey-1kg",
+        "marks-milk-based-diabetic-diet-400gm-tin",
+        "no-1-sweetened-condensed-milk-400gm"
+      ],
+      "first_relevant_rank": 1
+    },
+    {
+      "query": "iodized cooking salt",
+      "expected_product_ids": [
+        "aci-pure-salt-1kg",
+        "fresh-super-premium-salt-1kg"
+      ],
+      "returned_product_ids": [
+        "aci-pure-salt-1kg",
+        "fresh-chilli-morich-powder-100gm",
+        "fresh-chilli-morich-powder-200gm",
+        "fresh-super-premium-salt-1kg",
+        "aci-pure-chilli-morich-powder-100gm"
+      ],
+      "first_relevant_rank": 1
+    }
+  ]
+}
