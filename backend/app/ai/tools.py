@@ -23,6 +23,19 @@ SEARCH_STOP_WORDS = {
 }
 
 
+def chat_card_to_action_product(product: ChatProductCard) -> ChatProductCard:
+    return ChatProductCard(
+        id=product.id,
+        name=product.name,
+        category=product.category,
+        price=product.price,
+        unit=product.unit,
+        image_url=product.image_url,
+        product_url=product.product_url,
+        reason="Selected for cart action",
+    )
+
+
 def product_to_chat_card(product, reason: str | None = None) -> ChatProductCard:
     return ChatProductCard(
         id=product.id,
@@ -102,6 +115,46 @@ def propose_add_to_cart_tool(product_id: str, quantity: int) -> ChatCartAction |
         requires_confirmation=True,
         message=f"Add {max(1, quantity)} x {product.name} to cart.",
         product=card,
+    )
+
+
+def make_add_action(product: ChatProductCard, quantity: int) -> ChatCartAction:
+    safe_quantity = max(1, quantity)
+    return ChatCartAction(
+        type="add_item",
+        product_id=product.id,
+        product_name=product.name,
+        quantity=safe_quantity,
+        requires_confirmation=False,
+        message=f"Added {safe_quantity} x {product.name} to cart.",
+        product=chat_card_to_action_product(product),
+    )
+
+
+def make_remove_action(item: ChatCartItem) -> ChatCartAction:
+    return ChatCartAction(
+        type="remove_item",
+        product_id=item.product_id,
+        product_name=item.name,
+        requires_confirmation=False,
+        message=f"Removed {item.name} from cart.",
+    )
+
+
+def make_quantity_action(
+    action_type: str,
+    item: ChatCartItem,
+    quantity: int,
+) -> ChatCartAction:
+    safe_quantity = max(1, quantity)
+    verb = "Increased" if action_type == "increase_quantity" else "Decreased"
+    return ChatCartAction(
+        type=action_type,
+        product_id=item.product_id,
+        product_name=item.name,
+        quantity=safe_quantity,
+        requires_confirmation=False,
+        message=f"{verb} {item.name} quantity by {safe_quantity}.",
     )
 
 

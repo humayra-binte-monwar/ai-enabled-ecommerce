@@ -17,6 +17,7 @@ type CartItem = Product & {
 type ChatbotProps = {
   cart: CartItem[];
   onAddToCart: (product: ChatProductCard, quantity?: number) => void;
+  onApplyCartAction: (action: ChatCartAction) => void;
 };
 
 type ChatMessage = {
@@ -32,7 +33,7 @@ function createSessionId() {
   return `demo-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
+export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) {
   const [sessionId] = useState(createSessionId);
   const [message, setMessage] = useState("");
   const [providerStatus, setProviderStatus] =
@@ -113,6 +114,10 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
         })),
       });
 
+      response.cart_actions
+        .filter((action) => !action.requires_confirmation)
+        .forEach((action) => onApplyCartAction(action));
+
       setMessages((currentMessages) => [
         ...currentMessages,
         {
@@ -190,15 +195,26 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
                     </p>
                     <p className="mt-1 text-xs text-red-800">{action.message}</p>
                     {action.product ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onAddToCart(action.product!, action.quantity ?? 1)
-                        }
-                        className="mt-2 h-8 w-full rounded-md bg-red-600 text-xs font-semibold text-white"
-                      >
-                        Confirm Add
-                      </button>
+                      action.requires_confirmation ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onAddToCart(action.product!, action.quantity ?? 1)
+                          }
+                          className="mt-2 h-8 w-full rounded-md bg-red-600 text-xs font-semibold text-white"
+                        >
+                          Confirm Add
+                        </button>
+                      ) : (
+                        <p className="mt-2 text-xs font-semibold text-red-900">
+                          Applied to cart
+                        </p>
+                      )
+                    ) : null}
+                    {!action.product && !action.requires_confirmation ? (
+                      <p className="mt-2 text-xs font-semibold text-red-900">
+                        Applied to cart
+                      </p>
                     ) : null}
                   </div>
                 ))}
@@ -207,7 +223,7 @@ export function Chatbot({ cart, onAddToCart }: ChatbotProps) {
 
             {item.products?.length ? (
               <div className="mt-3 space-y-2">
-                {item.products.slice(0, 3).map((product) => (
+                {item.products.slice(0, 8).map((product) => (
                   <div
                     key={product.id}
                     className="rounded-md border border-slate-200 bg-slate-50 p-2"

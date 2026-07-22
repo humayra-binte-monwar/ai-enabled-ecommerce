@@ -8,7 +8,7 @@ import { BundlePlanner } from "@/components/BundlePlanner";
 import { CartOptimizer } from "@/components/CartOptimizer";
 import { Chatbot } from "@/components/Chatbot";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
-import { createOrder, type Product } from "@/lib/api";
+import { createOrder, type ChatCartAction, type Product } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
 type CartItem = Product & {
@@ -115,6 +115,49 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     );
   }
 
+  function removeFromCart(productId: string) {
+    setCart((currentCart) =>
+      currentCart.filter((item) => item.id !== productId)
+    );
+  }
+
+  function changeQuantityBy(productId: string, delta: number) {
+    setCart((currentCart) =>
+      currentCart
+        .map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity + delta }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  }
+
+  function applyChatCartAction(action: ChatCartAction) {
+    if (action.type === "add_item" && action.product) {
+      addSuggestedProductToCart(action.product, action.quantity ?? 1);
+      return;
+    }
+
+    if (!action.product_id) {
+      return;
+    }
+
+    if (action.type === "remove_item") {
+      removeFromCart(action.product_id);
+      return;
+    }
+
+    if (action.type === "increase_quantity") {
+      changeQuantityBy(action.product_id, action.quantity ?? 1);
+      return;
+    }
+
+    if (action.type === "decrease_quantity") {
+      changeQuantityBy(action.product_id, -(action.quantity ?? 1));
+    }
+  }
+
   function getCartQuantity(productId: string) {
     return cart.find((item) => item.id === productId)?.quantity ?? 0;
   }
@@ -179,7 +222,11 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section>
           <div className="mb-8">
-            <Chatbot cart={cart} onAddToCart={addSuggestedProductToCart} />
+            <Chatbot
+              cart={cart}
+              onAddToCart={addSuggestedProductToCart}
+              onApplyCartAction={applyChatCartAction}
+            />
           </div>
 
           <div className="mb-8">
