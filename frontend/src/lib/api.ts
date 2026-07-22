@@ -129,3 +129,47 @@ export async function findProductsByIntent(
 
   return response.json();
 }
+
+export type BundlePlannerItem = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string | null;
+  image_url: string | null;
+  product_url: string | null;
+  reason: string;
+};
+
+export type BundlePlannerInput = {
+  budget: number;
+  people: number;
+  duration_days: number;
+  meal_type: string;
+  preference?: string;
+};
+
+export type BundlePlannerResponse = {
+  summary: string;
+  estimated_total: number;
+  remaining_budget: number;
+  items: BundlePlannerItem[];
+};
+
+export async function planGroceryBundle(
+  input: BundlePlannerInput
+): Promise<BundlePlannerResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/ai/bundle-planner`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to plan grocery bundle");
+  }
+
+  return response.json();
+}
