@@ -1,0 +1,17 @@
+[
+  {"query": "premium chinigura rice", "expected_product_ids": ["rupchanda-chinigura-rice-1kg"]},
+  {"query": "fortified jeerashail rice", "expected_product_ids": ["aci-pure-fortified-jeerashail-rice-5kg"]},
+  {"query": "moshur lentils", "expected_product_ids": ["moshur-dal-loose-standard-kg"]},
+  {"query": "full cream milk powder", "expected_product_ids": ["pusti-plus-instant-full-cream-milk-powder-500gm", "fresh-instant-full-cream-milk-powder-500gm"]},
+  {"query": "loose eggs", "expected_product_ids": ["egg-loose"]},
+  {"query": "family blend tea", "expected_product_ids": ["seylon-family-blend-tea-400gm", "seylon-family-blend-tea-500gm"]},
+  {"query": "green tea bags", "expected_product_ids": ["fresh-premium-green-tea-37-5gm"]},
+  {"query": "espresso coffee", "expected_product_ids": ["davidoff-espresso-coffee-90-10gm"]},
+  {"query": "washing powder detergent", "expected_product_ids": ["wheel-2in1-clean-fresh-detergent-2kg", "wheel-clean-fresh-2in1-detergent-powder-500gm"]},
+  {"query": "liquid laundry detergent", "expected_product_ids": ["rin-liquid-detergent-400ml-local"]},
+  {"query": "hair fall shampoo", "expected_product_ids": ["dove-hair-fall-rescue-shampoo-650ml"]},
+  {"query": "instant masala noodles", "expected_product_ids": ["maggi-2-minute-noodles-masala-744gm-12pcs-pack", "fresh-instant-noodles-masala-flavor-496gm"]},
+  {"query": "whole wheat atta", "expected_product_ids": ["aci-nutrilife-brown-atta-2kg", "aci-brown-atta-1kg"]},
+  {"query": "refined sugar", "expected_product_ids": ["fresh-refined-sugar-1kg"]},
+  {"query": "iodized cooking salt", "expected_product_ids": ["aci-pure-salt-1kg", "fresh-super-premium-salt-1kg"]}
+]

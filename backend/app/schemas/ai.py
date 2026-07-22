@@ -24,6 +24,24 @@ class ProductFinderResponse(BaseModel):
     products: list[ProductFinderProduct]
 
 
+class HybridSearchRequest(BaseModel):
+    query: str = Field(min_length=2, max_length=300)
+    category: str | None = Field(default=None, max_length=100)
+    min_price: float | None = Field(default=None, ge=0)
+    max_price: float | None = Field(default=None, ge=0)
+    limit: int = Field(default=8, ge=1, le=20)
+
+
+class HybridSearchProduct(ProductFinderProduct):
+    semantic_score: float
+
+
+class HybridSearchResponse(BaseModel):
+    query: str
+    applied_filters: dict[str, str | float | None]
+    products: list[HybridSearchProduct]
+
+
 class BundlePlannerRequest(BaseModel):
     budget: float
     people: int

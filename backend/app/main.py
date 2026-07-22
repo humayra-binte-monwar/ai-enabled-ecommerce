@@ -4,6 +4,7 @@ from app.api.orders import router as orders_router
 from app.api.products import router as products_router
 from app.api.ai import router as ai_router
 from app.api.payments import router as payments_router
+from app.api.search import router as search_router
 
 app = FastAPI(
     title="AI Grocery Commerce API",
@@ -22,6 +23,7 @@ app.include_router(products_router)
 app.include_router(orders_router)
 app.include_router(ai_router)
 app.include_router(payments_router)
+app.include_router(search_router)
 
 
 @app.get("/api/health")

@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import type { Product, ProductFinderProduct } from "@/lib/api";
+import {
+  searchCatalogSemantically,
+  type Product,
+  type ProductFinderProduct,
+} from "@/lib/api";
 import {
   getSemanticSearchModelName,
   semanticProductSearch,
@@ -39,20 +43,26 @@ export function NaturalLanguageFinder({
 
     setIsLoading(true);
     setError("");
-    setSummary("Loading the free browser AI model and matching your catalog...");
+    setSummary("Searching the server-side embedding index...");
     setProducts([]);
 
     try {
-      const matches = await semanticProductSearch(catalogProducts, query);
+      const response = await searchCatalogSemantically(query.trim());
       setSummary(
-        `Matched "${query.trim()}" against ${catalogProducts.length} scraped products using ${getSemanticSearchModelName()}.`
+        `Retrieved ${response.products.length} catalog matches with all-MiniLM-L6-v2 and pgvector.`
       );
-      setProducts(matches);
+      setProducts(response.products);
     } catch {
-      setError(
-        "Could not load the browser AI model. Check your internet connection and try again."
-      );
-      setSummary("");
+      try {
+        const matches = await semanticProductSearch(catalogProducts, query);
+        setSummary(
+          `The server index is not ready, so this used the free browser fallback (${getSemanticSearchModelName()}).`
+        );
+        setProducts(matches);
+      } catch {
+        setError("Semantic search is unavailable. Check your connection and try again.");
+        setSummary("");
+      }
     } finally {
       setIsLoading(false);
     }

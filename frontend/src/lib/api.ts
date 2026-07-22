@@ -190,6 +190,34 @@ export type ProductFinderResponse = {
   products: ProductFinderProduct[];
 };
 
+export type HybridSearchResponse = {
+  query: string;
+  applied_filters: {
+    category: string | null;
+    min_price: number | null;
+    max_price: number | null;
+  };
+  products: Array<ProductFinderProduct & { semantic_score: number }>;
+};
+
+export async function searchCatalogSemantically(
+  query: string
+): Promise<HybridSearchResponse> {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/api/search/hybrid`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  }, 30000);
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response, "Semantic search is unavailable."));
+  }
+
+  return response.json();
+}
+
 export async function findProductsByIntent(
   query: string
 ): Promise<ProductFinderResponse> {
