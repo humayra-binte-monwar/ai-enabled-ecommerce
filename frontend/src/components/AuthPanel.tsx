@@ -15,7 +15,13 @@ export function AuthPanel() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data, error }) => {
+      if (error) {
+        await supabase.auth.signOut();
+        setUser(null);
+        return;
+      }
+
       setUser(data.user);
     });
 

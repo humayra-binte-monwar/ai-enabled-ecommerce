@@ -53,6 +53,16 @@ export type Order = {
   items: OrderItem[];
 };
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function getErrorMessage(response: Response, fallback: string) {
   try {
     const payload = await response.json();
@@ -84,7 +94,10 @@ export async function createCheckout(
   );
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response, "Failed to start checkout"));
+    throw new ApiError(
+      await getErrorMessage(response, "Failed to start checkout"),
+      response.status
+    );
   }
 
   return response.json();
@@ -99,7 +112,10 @@ export async function getMyOrders(accessToken: string): Promise<Order[]> {
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response, "Failed to load orders"));
+    throw new ApiError(
+      await getErrorMessage(response, "Failed to load orders"),
+      response.status
+    );
   }
 
   return response.json();

@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-import { getMyOrders, type Order } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
+import { ApiError, getMyOrders, type Order } from "@/lib/api";
+import {
+  createClient,
+  getFreshAccessToken,
+  refreshAccessToken,
+} from "@/lib/supabase/client";
 
 const STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelled",
@@ -22,18 +26,28 @@ export function OrderHistory() {
   useEffect(() => {
     async function loadOrders() {
       const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      let accessToken = await getFreshAccessToken();
 
-      if (!session) {
+      if (!accessToken) {
         setIsLoading(false);
         return;
       }
 
       try {
-        setOrders(await getMyOrders(session.access_token));
+        setOrders(await getMyOrders(accessToken));
       } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          accessToken = await refreshAccessToken();
+          if (accessToken) {
+            try {
+              setOrders(await getMyOrders(accessToken));
+              return;
+            } catch {
+              await supabase.auth.signOut();
+            }
+          }
+        }
+
         setError(
           error instanceof Error
             ? error.message

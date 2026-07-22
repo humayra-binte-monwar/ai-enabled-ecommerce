@@ -9,8 +9,12 @@ import { useCart } from "@/components/CartProvider";
 import { CartOptimizer } from "@/components/CartOptimizer";
 import { Chatbot } from "@/components/Chatbot";
 import { NaturalLanguageFinder } from "@/components/NaturalLanguageFinder";
-import { createCheckout, type ChatCartAction, type Product } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
+import { ApiError, createCheckout, type ChatCartAction, type Product } from "@/lib/api";
+import {
+  createClient,
+  getFreshAccessToken,
+  refreshAccessToken,
+} from "@/lib/supabase/client";
 
 type ProductCatalogProps = {
   products: Product[];
@@ -132,15 +136,13 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
     try {
       const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
+      let accessToken = await getFreshAccessToken();
+      if (!accessToken) {
         setOrderError("Please sign in before starting checkout.");
         return;
       }
 
-      const checkout = await createCheckout({
+      const checkoutPayload = {
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_address: customerAddress,
@@ -149,7 +151,25 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
           quantity: item.quantity,
         })),
         idempotency_key: crypto.randomUUID(),
-      }, session.access_token);
+      };
+
+      let checkout;
+      try {
+        checkout = await createCheckout(checkoutPayload, accessToken);
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 401) {
+          throw error;
+        }
+
+        accessToken = await refreshAccessToken();
+        if (!accessToken) {
+          await supabase.auth.signOut();
+          setOrderError("Please sign in again before starting checkout.");
+          return;
+        }
+
+        checkout = await createCheckout(checkoutPayload, accessToken);
+      }
 
       window.location.assign(checkout.payment_url);
     } catch (error) {
