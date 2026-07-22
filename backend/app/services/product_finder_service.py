@@ -4,12 +4,74 @@ from app.schemas.ai import ProductFinderProduct
 from app.services.product_service import load_products
 
 INTENT_KEYWORDS = {
-    "breakfast": ["milk", "bread", "egg", "cereal", "butter", "tea", "coffee"],
-    "snacks": ["chips", "biscuit", "cake", "noodles", "chanachur", "juice"],
-    "kids": ["milk", "juice", "biscuit", "cake", "chocolate", "noodles"],
-    "biryani": ["rice", "oil", "spice", "masala", "onion", "salt"],
-    "cooking": ["rice", "oil", "salt", "spice", "dal", "flour"],
-    "healthy": ["dal", "vegetable", "egg", "milk", "oats", "fruit"],
+    "affordable": ["rice", "dal", "oil", "salt", "sugar", "atta", "noodles"],
+    "baby": ["baby", "diaper", "powder", "lotion", "soap", "milk", "cereal"],
+    "baking": ["flour", "atta", "sugar", "butter", "milk", "powder", "chocolate"],
+    "bbq": ["chicken", "beef", "spice", "masala", "sauce", "oil", "coal"],
+    "beverage": ["water", "juice", "soft drink", "cola", "tea", "coffee"],
+    "biryani": ["rice", "oil", "spice", "masala", "onion", "salt", "ghee"],
+    "breakfast": ["milk", "bread", "egg", "cereal", "butter", "tea", "coffee", "oats"],
+    "cleaning": ["detergent", "soap", "dishwash", "cleaner", "toilet", "floor"],
+    "cooking": ["rice", "oil", "salt", "spice", "dal", "flour", "onion", "garlic"],
+    "curry": ["oil", "spice", "masala", "onion", "garlic", "ginger", "salt"],
+    "dairy": ["milk", "cheese", "butter", "yogurt", "cream", "powder"],
+    "dessert": ["sugar", "milk", "cream", "chocolate", "cake", "biscuit"],
+    "dinner": ["rice", "dal", "oil", "spice", "fish", "chicken", "vegetable"],
+    "eid": ["rice", "semai", "milk", "sugar", "spice", "oil", "ghee"],
+    "essentials": ["rice", "dal", "oil", "salt", "sugar", "flour", "soap"],
+    "family": ["rice", "oil", "dal", "milk", "egg", "bread", "soap"],
+    "healthy": ["dal", "vegetable", "egg", "milk", "oats", "fruit", "atta"],
+    "iftar": ["dates", "juice", "chola", "oil", "puffed rice", "noodles", "fruit"],
+    "kids": ["milk", "juice", "biscuit", "cake", "chocolate", "noodles", "cereal"],
+    "kitchen": ["rice", "oil", "salt", "spice", "masala", "flour", "sugar"],
+    "lunch": ["rice", "dal", "oil", "spice", "vegetable", "fish", "chicken"],
+    "meal": ["rice", "dal", "oil", "spice", "egg", "vegetable", "atta"],
+    "personal": ["soap", "shampoo", "toothpaste", "brush", "lotion", "powder"],
+    "pet": ["cat", "dog", "pet", "food"],
+    "picnic": ["chips", "biscuit", "juice", "water", "cake", "noodles", "snacks"],
+    "ramadan": ["dates", "juice", "chola", "oil", "puffed rice", "semai", "milk"],
+    "school": ["biscuit", "juice", "cake", "bread", "chocolate", "water"],
+    "snacks": ["chips", "biscuit", "cake", "noodles", "chanachur", "juice", "chocolate"],
+    "tea": ["tea", "milk", "sugar", "biscuit", "cake"],
+    "toiletries": ["soap", "shampoo", "toothpaste", "brush", "tissue", "lotion"],
+}
+
+QUERY_SYNONYMS = {
+    "bathroom": "toiletries",
+    "cheap": "affordable",
+    "children": "kids",
+    "cook": "cooking",
+    "groceries": "essentials",
+    "grocery": "essentials",
+    "kid": "kids",
+    "low": "affordable",
+    "party": "picnic",
+    "school lunch": "school",
+    "value": "affordable",
+}
+
+STOP_WORDS = {
+    "about",
+    "below",
+    "best",
+    "budget",
+    "find",
+    "for",
+    "give",
+    "good",
+    "items",
+    "looking",
+    "max",
+    "maximum",
+    "need",
+    "show",
+    "some",
+    "taka",
+    "that",
+    "under",
+    "want",
+    "with",
+    "within",
 }
 
 
@@ -28,6 +90,11 @@ def get_intent_terms(query: str) -> list[str]:
     query_lower = query.lower()
     terms = []
 
+    for phrase, intent in QUERY_SYNONYMS.items():
+        if phrase in query_lower:
+            terms.append(intent)
+            terms.extend(INTENT_KEYWORDS.get(intent, []))
+
     for intent, keywords in INTENT_KEYWORDS.items():
         if intent in query_lower:
             terms.extend(keywords)
@@ -35,7 +102,7 @@ def get_intent_terms(query: str) -> list[str]:
     direct_words = [
         word
         for word in re.findall(r"[a-zA-Z]+", query_lower)
-        if len(word) > 2 and word not in {"under", "below", "within", "taka", "max", "maximum"}
+        if len(word) > 2 and word not in STOP_WORDS
     ]
 
     terms.extend(direct_words)
