@@ -153,6 +153,15 @@ def make_remove_action(item: ChatCartItem) -> ChatCartAction:
     )
 
 
+def make_clear_cart_action(item_count: int) -> ChatCartAction:
+    noun = "item" if item_count == 1 else "items"
+    return ChatCartAction(
+        type="clear_cart",
+        requires_confirmation=False,
+        message=f"Removed all {item_count} {noun} from cart.",
+    )
+
+
 def make_quantity_action(
     action_type: str,
     item: ChatCartItem,

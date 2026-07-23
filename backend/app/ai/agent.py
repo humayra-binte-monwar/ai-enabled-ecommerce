@@ -1,11 +1,13 @@
 import re
 import json
+import logging
 
 from app.ai.guardrails import health_disclaimer, is_health_question
 from app.ai.prompts import CHAT_SYNTHESIS_PROMPT, FALLBACK_FOLLOW_UPS, SYSTEM_PROMPT
 from app.ai.tools import (
     compare_prices_tool,
     make_add_action,
+    make_clear_cart_action,
     make_quantity_action,
     make_remove_action,
     optimize_cart_tool,
@@ -15,6 +17,8 @@ from app.ai.tools import (
 )
 from app.core.settings import get_settings
 from app.schemas.ai import ChatCartAction, ChatCitation, ChatProductCard, ChatRequest, ChatResponse
+
+logger = logging.getLogger(__name__)
 
 try:
     from langchain_openai import ChatOpenAI
@@ -51,6 +55,34 @@ def looks_like_cart_remove(message: str) -> bool:
     return any(term in message_lower for term in ["remove", "delete", "drop"]) and "cart" in message_lower
 
 
+def looks_like_clear_cart(message: str) -> bool:
+    message_lower = message.lower()
+    return "cart" in message_lower and any(
+        term in message_lower
+        for term in [
+            "remove everything",
+            "remove all",
+            "delete everything",
+            "delete all",
+            "clear",
+            "empty",
+        ]
+    )
+
+
+def looks_like_cart_status(message: str) -> bool:
+    message_lower = message.lower().strip(" ?!.")
+    return "cart" in message_lower and any(
+        term in message_lower
+        for term in ["empty", "what is in", "what's in", "show", "items", "anything"]
+    )
+
+
+def looks_like_greeting(message: str) -> bool:
+    message_lower = message.lower().strip(" ?!.")
+    return message_lower in {"hi", "hello", "hey", "salam", "assalamu alaikum"}
+
+
 def looks_like_cart_increase(message: str) -> bool:
     message_lower = message.lower()
     return any(term in message_lower for term in ["increase", "more", "add one", "add 1"]) and (
@@ -81,6 +113,19 @@ def looks_like_cart_review(message: str) -> bool:
 def should_compare_prices(message: str) -> bool:
     message_lower = message.lower()
     return any(term in message_lower for term in ["cheapest", "lowest price", "compare", "best value"])
+
+
+def cart_status_message(cart_items) -> str:
+    if not cart_items:
+        return "Yes, your cart is empty."
+
+    item_count = sum(item.quantity for item in cart_items)
+    noun = "item" if item_count == 1 else "items"
+    names = ", ".join(f"{item.quantity} x {item.name}" for item in cart_items[:5])
+    if len(cart_items) > 5:
+        names += f", and {len(cart_items) - 5} more"
+
+    return f"No, your cart has {item_count} {noun}: {names}."
 
 
 def clean_search_query(message: str) -> str:
@@ -324,7 +369,8 @@ def synthesize_with_llm(
                 ("user", json.dumps(prompt_payload)),
             ]
         )
-    except Exception:
+    except Exception as error:
+        logger.warning("AI chat synthesis failed; using deterministic response: %s", error, exc_info=True)
         return default_message, True
 
     return str(response.content), False
@@ -357,6 +403,44 @@ def run_chat(request: ChatRequest) -> ChatResponse:
     products = []
     cart_actions = []
     intent = "product_search"
+
+    if looks_like_greeting(message):
+        return ChatResponse(
+            message=(
+                "Hello! I can help you find groceries, compare prices, build bundles, "
+                "or update your cart."
+            ),
+            intent="small_talk",
+            follow_up_suggestions=FALLBACK_FOLLOW_UPS,
+            fallback=False,
+        )
+
+    if looks_like_cart_status(message):
+        return ChatResponse(
+            message=cart_status_message(request.cart_items),
+            intent="cart_status",
+            tools_used=["inspect_cart"],
+            follow_up_suggestions=FALLBACK_FOLLOW_UPS,
+            fallback=False,
+        )
+
+    if looks_like_clear_cart(message):
+        intent = "cart_clear"
+        tools_used.append("clear_cart")
+        if request.cart_items:
+            cart_actions.append(make_clear_cart_action(len(request.cart_items)))
+            default_message = cart_actions[0].message
+        else:
+            default_message = "Your cart is already empty."
+
+        return ChatResponse(
+            message=default_message,
+            intent=intent,
+            cart_actions=cart_actions,
+            follow_up_suggestions=FALLBACK_FOLLOW_UPS,
+            tools_used=tools_used,
+            fallback=False,
+        )
 
     if looks_like_cart_remove(message):
         intent = "cart_remove"

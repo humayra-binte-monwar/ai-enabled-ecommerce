@@ -31,6 +31,7 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
     addToCart,
     cart,
     changeQuantityBy,
+    clearCart,
     decreaseQuantity,
     getCartQuantity,
     increaseQuantity,
@@ -80,6 +81,11 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
   }
 
   function applyChatCartAction(action: ChatCartAction) {
+    if (action.type === "clear_cart") {
+      clearCart();
+      return;
+    }
+
     if (action.type === "add_item" && action.product) {
       addSuggestedProductToCart(action.product, action.quantity ?? 1);
       return;

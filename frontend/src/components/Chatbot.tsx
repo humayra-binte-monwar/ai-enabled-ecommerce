@@ -59,8 +59,8 @@ export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) 
   );
 
   const providerLabel = providerStatus?.client_ready
-    ? `${providerStatus.provider.toUpperCase()} ${providerStatus.model}`
-    : "Fallback mode";
+    ? `${providerStatus.provider.toUpperCase()} configured`
+    : "Catalog tools";
 
   const providerStatusClass = providerStatus?.client_ready
     ? "bg-emerald-50 text-emerald-700"
@@ -178,7 +178,7 @@ export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) 
               <p className="mt-2 text-xs font-medium text-slate-500">
                 Tools used: {item.toolsUsed.join(", ")}
                 {typeof item.fallback === "boolean"
-                  ? ` | ${item.fallback ? "fallback mode" : "Groq response"}`
+                  ? ` | ${item.fallback ? "catalog tools response" : "AI response"}`
                   : ""}
               </p>
             ) : null}
