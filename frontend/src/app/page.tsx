@@ -1,20 +1,9 @@
 import { AuthPanel } from "@/components/AuthPanel";
 import { CartPanel } from "@/components/CartPanel";
 import { OrderHistory } from "@/components/OrderHistory";
-import { ProductCatalog } from "@/components/ProductCatalog";
-import { getProducts, type Product } from "@/lib/api";
+import { ProductCatalogLoader } from "@/components/ProductCatalogLoader";
 
-export default async function Home() {
-  let products: Product[] = [];
-  let productsError = "";
-
-  try {
-    products = await getProducts();
-  } catch {
-    productsError =
-      "Products could not load. Make sure the FastAPI backend is running.";
-  }
-
+export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50">
       <header className="border-b border-red-100 bg-white">
@@ -42,11 +31,7 @@ export default async function Home() {
               </section>
             </div>
 
-            {productsError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">{productsError}</div>
-            ) : (
-              <ProductCatalog products={products} />
-            )}
+            <ProductCatalogLoader />
           </div>
 
           <div className="lg:sticky lg:top-6">
