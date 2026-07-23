@@ -45,6 +45,18 @@ def extract_budget(message: str) -> float | None:
     return float(match.group(1)) if match else None
 
 
+def extract_people(message: str) -> int:
+    message_lower = message.lower()
+    match = re.search(r"\b(\d+)\s*(?:person|people|adult|adults|member|members)\b", message_lower)
+    if match:
+        return max(1, int(match.group(1)))
+
+    if re.search(r"\bfor\s+one\b", message_lower):
+        return 1
+
+    return 2
+
+
 def looks_like_cart_add(message: str) -> bool:
     message_lower = message.lower()
     return any(term in message_lower for term in ["add", "put", "buy"])
@@ -99,10 +111,24 @@ def looks_like_cart_decrease(message: str) -> bool:
 
 def looks_like_bundle_request(message: str) -> bool:
     message_lower = message.lower()
-    return any(
+    plan_terms = any(
         term in message_lower
-        for term in ["bundle", "basket", "grocery list", "meal plan", "recipe"]
+        for term in [
+            "bundle",
+            "basket",
+            "grocery list",
+            "meal plan",
+            "meal-plan",
+            "recipe",
+            "plan",
+            "shopping list",
+        ]
     )
+    meal_terms = any(term in message_lower for term in ["breakfast", "lunch", "dinner", "iftar", "snacks"])
+    duration_terms = re.search(r"\b\d+\s*(?:day|days|week|weeks|month|months)\b", message_lower)
+    quantity_terms = any(term in message_lower for term in ["quantity", "quantities", "recommended"])
+
+    return plan_terms or (meal_terms and (duration_terms or quantity_terms))
 
 
 def looks_like_cart_review(message: str) -> bool:
@@ -113,6 +139,15 @@ def looks_like_cart_review(message: str) -> bool:
 def should_compare_prices(message: str) -> bool:
     message_lower = message.lower()
     return any(term in message_lower for term in ["cheapest", "lowest price", "compare", "best value"])
+
+
+def extract_meal_type(message: str) -> str:
+    message_lower = message.lower()
+    for meal in ["breakfast", "lunch", "dinner", "iftar", "snacks", "tea"]:
+        if meal in message_lower:
+            return meal
+
+    return clean_search_query(message)
 
 
 def cart_status_message(cart_items) -> str:
@@ -131,6 +166,15 @@ def cart_status_message(cart_items) -> str:
 def clean_search_query(message: str) -> str:
     cleaned = message.lower()
     removable_phrases = [
+        "to my cart",
+        "to cart",
+        "my cart",
+        "cheapest",
+        "lowest price",
+        "compare",
+        "best value",
+    ]
+    removable_words = [
         "add",
         "put",
         "remove",
@@ -139,14 +183,7 @@ def clean_search_query(message: str) -> str:
         "increase",
         "decrease",
         "reduce",
-        "to my cart",
-        "to cart",
-        "my cart",
         "cart",
-        "cheapest",
-        "lowest price",
-        "compare",
-        "best value",
         "the",
         "of",
         "a",
@@ -161,7 +198,11 @@ def clean_search_query(message: str) -> str:
         "please",
     ]
     for term in removable_phrases:
-        cleaned = cleaned.replace(term, " ")
+        cleaned = re.sub(rf"\b{re.escape(term)}\b", " ", cleaned)
+
+    for term in removable_words:
+        cleaned = re.sub(rf"\b{re.escape(term)}\b", " ", cleaned)
+
     cleaned = re.sub(r"\b\d+\b", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned or message
@@ -169,6 +210,10 @@ def clean_search_query(message: str) -> str:
 
 def extract_duration_days(message: str) -> int:
     message_lower = message.lower()
+    month_match = re.search(r"(\d+)\s*(?:month|months)", message_lower)
+    if month_match:
+        return max(1, int(month_match.group(1)) * 30)
+
     week_match = re.search(r"(\d+)\s*(?:week|weeks)", message_lower)
     if week_match:
         return max(1, int(week_match.group(1)) * 7)
@@ -212,6 +257,29 @@ def unique_products(products: list[ChatProductCard]) -> list[ChatProductCard]:
         seen_ids.add(product.id)
 
     return unique
+
+
+def bundle_message(bundle: dict, budget: float) -> str:
+    items = bundle["items"]
+    if not items:
+        return bundle["summary"]
+
+    lines = [
+        (
+            f"Built a {len(items)}-item plan within Tk {budget:.0f}. "
+            f"Estimated total: Tk {bundle['estimated_total']:.0f}; "
+            f"remaining budget: Tk {bundle['remaining_budget']:.0f}."
+        ),
+        "Recommended quantities:",
+    ]
+
+    for index, item in enumerate(items[:8], start=1):
+        lines.append(
+            f"{index}. {item.name}: {item.suggested_quantity} x {item.unit or 'item'} "
+            f"(Tk {item.price:.0f} each). {item.reason}"
+        )
+
+    return "\n".join(lines)
 
 
 def build_multi_meal_grocery_list(message: str) -> tuple[str, list[ChatProductCard]]:
@@ -551,11 +619,13 @@ def run_chat(request: ChatRequest) -> ChatResponse:
             default_message, products = build_multi_meal_grocery_list(message)
         else:
             budget = extract_budget(message) or 1500
+            people = extract_people(message)
+            duration_days = extract_duration_days(message)
             bundle = plan_bundle_tool(
                 budget=budget,
-                people=2,
-                duration_days=extract_duration_days(message),
-                meal_type=query,
+                people=people,
+                duration_days=duration_days,
+                meal_type=extract_meal_type(message),
             )
             for bundle_item in bundle["items"][:8]:
                 products.append(
@@ -567,23 +637,17 @@ def run_chat(request: ChatRequest) -> ChatResponse:
                         unit=bundle_item.unit,
                         image_url=bundle_item.image_url,
                         product_url=bundle_item.product_url,
-                        reason=bundle_item.reason,
+                        reason=(
+                            f"Recommended quantity: {bundle_item.suggested_quantity}. "
+                            f"{bundle_item.reason}"
+                        ),
                     )
                 )
 
-            default_message = f"{bundle['summary']} Estimated total: Tk {bundle['estimated_total']}."
-        response_message, used_fallback = synthesize_with_llm(
-            user_message=message,
-            intent=intent,
-            default_message=default_message,
-            products=products,
-            cart_actions=cart_actions,
-            tools_used=tools_used,
-        )
-        response_message = sanitize_cart_language(response_message, cart_actions)
+            default_message = bundle_message(bundle, budget)
 
         return ChatResponse(
-            message=response_message,
+            message=default_message,
             intent=intent,
             products=products,
             citations=[
@@ -592,7 +656,7 @@ def run_chat(request: ChatRequest) -> ChatResponse:
             ],
             follow_up_suggestions=["Add this bundle to my cart", "Make it cheaper", "Make it healthier"],
             tools_used=tools_used,
-            fallback=used_fallback,
+            fallback=False,
         )
 
     if should_compare_prices(message):

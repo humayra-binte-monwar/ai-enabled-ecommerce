@@ -33,6 +33,31 @@ function createSessionId() {
   return `demo-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function wantsToAddLastRecommendations(message: string) {
+  const normalized = message.toLowerCase().replace(/\s+/g, " ").trim();
+  const mentionsCart = /\b(?:cart|basket)\b/.test(normalized);
+  const addIntent = /\b(?:add|put|move)\b/.test(normalized);
+  const groupIntent = /\b(?:all|everything|every|bundle|these|them|recommendations|suggestions|items)\b/.test(normalized);
+
+  return mentionsCart && addIntent && groupIntent;
+}
+
+function getLastAssistantProducts(messages: ChatMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const item = messages[index];
+    if (item.role === "assistant" && item.products?.length) {
+      return item.products;
+    }
+  }
+
+  return [];
+}
+
+function getRecommendedQuantity(product: ChatProductCard) {
+  const match = product.reason?.match(/recommended quantity:\s*(\d+)/i);
+  return match ? Number(match[1]) : 1;
+}
+
 export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) {
   const [sessionId] = useState(createSessionId);
   const [message, setMessage] = useState("");
@@ -100,6 +125,53 @@ export function Chatbot({ cart, onAddToCart, onApplyCartAction }: ChatbotProps) 
       ...currentMessages,
       { role: "user", content: trimmedMessage },
     ]);
+
+    if (wantsToAddLastRecommendations(trimmedMessage)) {
+      const productsToAdd = getLastAssistantProducts(messages).slice(0, 8);
+
+      if (!productsToAdd.length) {
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            role: "assistant",
+            content:
+              "I do not have a recent recommendation list to add yet. Ask me for products or a bundle first, then say add everything to cart.",
+            toolsUsed: ["inspect_recent_recommendations"],
+            fallback: false,
+          },
+        ]);
+        setIsSending(false);
+        return;
+      }
+
+      const cartActions = productsToAdd.map((product) => {
+        const quantity = getRecommendedQuantity(product);
+        onAddToCart(product, quantity);
+
+        return {
+          type: "add_item",
+          product_id: product.id,
+          product_name: product.name,
+          quantity,
+          requires_confirmation: false,
+          message: `Added ${quantity} x ${product.name} to cart.`,
+          product,
+        } satisfies ChatCartAction;
+      });
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          role: "assistant",
+          content: `Added ${cartActions.length} recommended item(s) from the last result to your cart.`,
+          cartActions,
+          toolsUsed: ["add_recent_recommendations_to_cart"],
+          fallback: false,
+        },
+      ]);
+      setIsSending(false);
+      return;
+    }
 
     try {
       const response = await sendChatMessage({
