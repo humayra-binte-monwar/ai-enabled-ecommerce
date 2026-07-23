@@ -5,17 +5,11 @@ import Link from "next/link";
 import { useState } from "react";
 
 import {
-  searchCatalogSemantically,
-  type Product,
+  findProductsByIntent,
   type ProductFinderProduct,
 } from "@/lib/api";
-import {
-  getSemanticSearchModelName,
-  semanticProductSearch,
-} from "@/lib/semanticProductSearch";
 
 type NaturalLanguageFinderProps = {
-  products: Product[];
   getQuantity: (productId: string) => number;
   onAddToCart: (product: ProductFinderProduct) => void;
   onDecreaseQuantity: (productId: string) => void;
@@ -23,7 +17,6 @@ type NaturalLanguageFinderProps = {
 };
 
 export function NaturalLanguageFinder({
-  products: catalogProducts,
   getQuantity,
   onAddToCart,
   onDecreaseQuantity,
@@ -43,26 +36,16 @@ export function NaturalLanguageFinder({
 
     setIsLoading(true);
     setError("");
-    setSummary("Searching the server-side embedding index...");
+    setSummary("Matching your request with the grocery catalogue...");
     setProducts([]);
 
     try {
-      const response = await searchCatalogSemantically(query.trim());
-      setSummary(
-        `Retrieved ${response.products.length} catalog matches with all-MiniLM-L6-v2 and pgvector.`
-      );
+      const response = await findProductsByIntent(query.trim());
+      setSummary(response.summary);
       setProducts(response.products);
     } catch {
-      try {
-        const matches = await semanticProductSearch(catalogProducts, query);
-        setSummary(
-          `The server index is not ready, so this used the free browser fallback (${getSemanticSearchModelName()}).`
-        );
-        setProducts(matches);
-      } catch {
-        setError("Semantic search is unavailable. Check your connection and try again.");
-        setSummary("");
-      }
+      setError("The product finder is waking up. Please try again in a moment.");
+      setSummary("");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +56,7 @@ export function NaturalLanguageFinder({
       <div>
         <p className="text-sm font-medium text-red-700">AI Feature 1</p>
         <h2 className="mt-1 text-lg font-bold text-slate-950">
-          Free Semantic Product Finder
+          Smart Product Finder
         </h2>
         <p className="mt-1 text-sm text-slate-600">
           Try phrases like breakfast under 300, snacks for kids, or biryani

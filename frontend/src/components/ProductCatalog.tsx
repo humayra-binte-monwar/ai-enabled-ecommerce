@@ -122,7 +122,6 @@ export function ProductCatalog({ products }: ProductCatalogProps) {
 
           <div className="mb-8">
             <NaturalLanguageFinder
-              products={products}
               getQuantity={getCartQuantity}
               onAddToCart={addSuggestedProductToCart}
               onDecreaseQuantity={decreaseQuantity}

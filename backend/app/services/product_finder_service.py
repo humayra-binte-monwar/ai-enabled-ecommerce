@@ -104,6 +104,12 @@ NON_FOOD_TERMS = {
     "wash",
 }
 
+NON_FOOD_CATEGORIES = {
+    "cleaning",
+    "personal care",
+    "storage & containers",
+}
+
 FOOD_INTENTS = {
     "baking",
     "biryani",
@@ -204,7 +210,14 @@ def find_products(query: str) -> dict:
             ]
         ).lower()
 
-        if food_query and any(term in searchable_text for term in NON_FOOD_TERMS):
+        product_categories = {
+            product.category.lower(),
+            (product.normalized_category or "").lower(),
+        }
+        if food_query and (
+            any(term in searchable_text for term in NON_FOOD_TERMS)
+            or product_categories.intersection(NON_FOOD_CATEGORIES)
+        ):
             continue
 
         score = 0
