@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     ai_health_disclaimer_enabled: bool = True
     frontend_url: str = "http://localhost:3000"
     backend_url: str = "http://localhost:8001"
+    cors_allowed_origins: str = ""
     sslcommerz_store_id: str = ""
     sslcommerz_store_password: str = ""
     sslcommerz_sandbox: bool = True

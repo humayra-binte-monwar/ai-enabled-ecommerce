@@ -5,6 +5,14 @@ from app.api.products import router as products_router
 from app.api.ai import router as ai_router
 from app.api.payments import router as payments_router
 from app.api.search import router as search_router
+from app.core.settings import get_settings
+
+settings = get_settings()
+allowed_origins = [
+    origin.strip()
+    for origin in settings.cors_allowed_origins.split(",")
+    if origin.strip()
+] or [settings.frontend_url, "http://localhost:3000"]
 
 app = FastAPI(
     title="AI Grocery Commerce API",
@@ -13,7 +21,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
