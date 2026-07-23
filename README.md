@@ -17,6 +17,7 @@ This repository implements a vertical slice of an AI-enabled grocery commerce sy
 
 - Frontend: [https://ai-enabled-ecommerce.vercel.app](https://ai-enabled-ecommerce.vercel.app)
 - Backend health: [https://ai-grocery-commerce-api.onrender.com/api/health](https://ai-grocery-commerce-api.onrender.com/api/health)
+- Project Demo: [https://youtu.be/QXPYDL4ChhE](https://youtu.be/QXPYDL4ChhE)
 
 ## What The App Does
 
